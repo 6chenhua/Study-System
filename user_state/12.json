@@ -1,0 +1,29 @@
+{
+    "user_id": "12",
+    "style": "analytic_verbal",
+    "current_day": 1,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    0
+                ]
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": true
+    }
+}

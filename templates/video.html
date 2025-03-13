@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video - Day {{ day }}</title>
+</head>
+<body>
+    <h1>Day {{ day }} Video</h1>
+    {% for video_path in video_paths %}
+        <video controls>
+            <source src="{{ video_path }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <br>
+    {% endfor %}
+    <button onclick="startQuiz()">Start Quiz</button>
+    <script>
+        async function startQuiz() {
+            // 发送请求更新 video_watched
+            const response = await fetch(`/update_video_watched/{{ user_id }}/{{ day }}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                // 更新成功后跳转到测验页面
+                window.location.href = `/quiz/{{ user_id }}/{{ day }}`;
+            } else {
+                alert('Failed to update video status');
+            }
+        }
+    </script>
+</body>
+</html>

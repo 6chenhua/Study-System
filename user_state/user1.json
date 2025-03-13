@@ -1,0 +1,56 @@
+{
+    "user_id": "user1",
+    "style": "holistic_verbal",
+    "current_day": 1,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 0.6,
+                        "wrong_questions": {
+                            "choice": [
+                                {
+                                    "id": "w7",
+                                    "question": "书本的英文是？",
+                                    "options": [
+                                        "book",
+                                        "ruler"
+                                    ],
+                                    "answer": "book",
+                                    "user_answer": "ruler"
+                                },
+                                {
+                                    "id": "w8",
+                                    "question": "书本的英文是？",
+                                    "options": [
+                                        "book",
+                                        "ruler"
+                                    ],
+                                    "answer": "book",
+                                    "user_answer": "ruler"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": false
+    }
+}

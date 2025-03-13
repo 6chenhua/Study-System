@@ -1,0 +1,24 @@
+{
+    "user_id": "user1",
+    "style": "analytic_verbal",
+    "current_day": 1,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    }
+}

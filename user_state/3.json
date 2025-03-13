@@ -1,0 +1,66 @@
+{
+    "user_id": "3",
+    "style": "analytic_verbal",
+    "current_day": 1,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 0.4,
+                        "wrong_questions": {
+                            "choice": [
+                                {
+                                    "id": "w1",
+                                    "question": "1. 书本的英文是？",
+                                    "options": [
+                                        "book",
+                                        "ruler"
+                                    ],
+                                    "answer": "book",
+                                    "user_answer": null
+                                },
+                                {
+                                    "id": "w5",
+                                    "question": "2. 书本的英文是？",
+                                    "options": [
+                                        "book",
+                                        "ruler"
+                                    ],
+                                    "answer": "book",
+                                    "user_answer": null
+                                },
+                                {
+                                    "id": "w6",
+                                    "question": "3. 书本的英文是？",
+                                    "options": [
+                                        "book",
+                                        "ruler"
+                                    ],
+                                    "answer": "book",
+                                    "user_answer": null
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": false
+    }
+}

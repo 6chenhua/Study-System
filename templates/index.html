@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Learning System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Welcome to the Learning System</h1>
+    <form method="POST">
+        <label for="user_id">User ID:</label>
+        <input type="text" name="user_id" id="user_id" required><br>
+        <label for="style">Choose your learning style:</label>
+        <select name="style" id="style">
+            <option value="holistic_verbal">Holistic Verbal</option>
+            <option value="analytic_visual">Analytic Visual</option>
+            <option value="holistic_visual">Holistic Verbal</option>
+            <option value="analytic_verbal" selected>Analytic Visual</option>
+        </select><br>
+        <button type="submit">Start</button>
+    </form>
+</body>
+</html>

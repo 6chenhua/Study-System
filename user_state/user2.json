@@ -1,0 +1,60 @@
+{
+    "user_id": "user2",
+    "style": "analytic_verbal",
+    "current_day": 2,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rates": {
+                            "choice": 1.0,
+                            "matching": 1.0
+                        },
+                        "wrong_questions": {
+                            "choice": [],
+                            "matching": []
+                        }
+                    },
+                    {
+                        "day": 2,
+                        "correct_rates": {
+                            "choice": 1.0,
+                            "matching": 1.0,
+                            "read_aloud": 0.0
+                        },
+                        "wrong_questions": {
+                            "choice": [],
+                            "matching": [],
+                            "read_aloud": [
+                                {
+                                    "id": "w3",
+                                    "question": "Read: pencil",
+                                    "answer": "pencil",
+                                    "user_answer": "1"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": false,
+        "2": true
+    }
+}

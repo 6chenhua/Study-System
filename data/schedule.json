@@ -1,0 +1,35 @@
+{
+    "schedule": {
+        "unit1": {
+            "word": [1, 2, 4, 8, 15],
+            "sentence": [3, 4, 6, 10, 17]
+        },
+        "unit2": {
+            "word": [9, 10, 12, 16, 23],
+            "sentence": [11, 12, 14, 18, 25]
+        },
+        "combined": 26,
+        "rest": [5, 7, 13, 19, 20, 21, 22, 24]
+    },
+    "subtype_schedule": {
+        "1": {"word": ["choice"], "sentence": []},
+        "2": {"word": ["choice", "read_aloud"], "sentence": []},
+        "3": {"word": [], "sentence": ["choice"]},
+        "4": {"word": ["choice", "matching", "read_aloud"], "sentence": ["read_aloud", "choice"]},
+        "6": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},
+        "8": {"word": ["choice", "read_aloud", "spelling"], "sentence": []},
+        "9": {"word": ["choice"], "sentence": []},
+        "10": {"word": ["choice", "read_aloud"], "sentence": []},
+        "11": {"word": [], "sentence": ["choice"]},
+        "12": {"word": ["choice", "matching", "read_aloud"], "sentence": ["read_aloud", "choice"]},
+        "14": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},
+
+        "15": {"word": ["choice", "read_aloud", "spelling"], "sentence": []},
+        "16": {"word": ["choice", "matching", "read_aloud", "spelling"], "sentence": []},
+        "17": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},
+        "18": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},
+        "23": {"word": ["choice", "matching", "read_aloud", "spelling"], "sentence": []},
+        "25": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},
+        "26": {"word": ["choice", "matching", "read_aloud", "spelling"], "sentence": ["read_aloud", "matching", "choice"]}
+    }
+}

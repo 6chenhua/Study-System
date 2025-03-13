@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+    <title>Quiz - Day {{ day }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Day {{ day }} - Quiz</h1>
+    <form id="quizForm" data-user-id="{{ user_id }}" data-day="{{ day }}">
+        {% for key, q_list in questions.items() %}
+            <h2>{{ key.replace('_', ' ') | capitalize }}</h2>
+            {% for question in q_list %}
+                <div class="question">
+                    <p>{{ question.question }}</p>
+                    {% if "options" in question %}
+                        {% if "matching" in key %}
+                            <select name="{{ question.id }}">
+                                {% for option in question.options %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            {% for option in question.options %}
+                                <input type="radio" name="{{ question.id }}" value="{{ option }}"> {{ option }}<br>
+                            {% endfor %}
+                        {% endif %}
+                    {% else %}
+                        <input type="text" name="{{ question.id }}">
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+        <button type="submit">Submit</button>
+    </form>
+    <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+</body>
+</html>
