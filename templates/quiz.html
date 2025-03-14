@@ -25,7 +25,8 @@
                             {% endfor %}
                         {% endif %}
                     {% else %}
-                        <input type="text" name="{{ question.id }}">
+                        <!-- 为 read_aloud 添加文本输入 -->
+                        <input type="text" name="{{ question.id }}" placeholder="Type your answer">
                     {% endif %}
                 </div>
             {% endfor %}

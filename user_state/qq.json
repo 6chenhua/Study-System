@@ -1,0 +1,147 @@
+{
+    "user_id": "qq",
+    "style": "analytic_verbal",
+    "current_day": 27,
+    "progress": "completed",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 2,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 8,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 15,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 3,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 10,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 17,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 9,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 10,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 12,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 16,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 23,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 11,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 12,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 14,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 18,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 25,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        },
+        "combined": {
+            "all": {
+                "attempts": [
+                    {
+                        "day": 26,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        }
+    },
+    "video_watched": {
+        "1": true,
+        "3": true,
+        "9": true,
+        "11": true,
+        "26": true
+    },
+    "current_task_index": 0
+}

@@ -66,7 +66,8 @@ def video(user_id, day):
         video_paths = []
         for task in tasks:
             if task["attempt"] == 0:  # 仅初学任务有视频
-                video_path = f"/static/videos/analytic_verbal_{task['unit']}_{task['type']}_day{day}.mp4"
+                video_path = f"videos/{user_state['style']}/{task['unit']}_{task['type']}_day{day}.mp4"
+                print('=*100')
                 video_paths.append(video_path)
         if not video_paths:
             print(f"No video available for day {day}, redirecting to quiz")
@@ -154,9 +155,11 @@ def quiz(user_id, day):
         print(f"No tasks for day {day}, moving to day {user_state['current_day']}, redirecting to index")
         return redirect(url_for("index"))
 
+    # 仅在进入新的一天时重置 current_task_index
     if "current_task_index" not in user_state or user_state["current_day"] != day:
         user_state["current_task_index"] = 0
         user_state["current_day"] = day
+        user_manager.save_user(user_state)  # 确保状态保存
         print(f"Reset current_task_index to 0 for day {day}")
     current_task_index = user_state["current_task_index"]
     print(f"Current task index: {current_task_index}, Total tasks: {len(tasks)}")
@@ -198,7 +201,7 @@ def quiz(user_id, day):
             key = f"{current_task['unit']}_{current_task['type']}_{subtype}"
             q_list = flow_controller.quiz_manager.get_questions(current_task["unit"], current_task["type"], subtype)
             for i, q in enumerate(q_list):
-                q["id"] = f"{current_task['unit']}_{current_task['type']}_{current_task['subtypes'][0]}_{i}"
+                q["id"] = f"{current_task['unit']}_{current_task['type']}_{subtype}_{i}"
             questions[key] = q_list
         task_info = [{"unit": current_task["unit"], "type": current_task["type"], "attempt": current_task["attempt"]}]
         print(f"Generated questions for task {current_task}: {questions}")
@@ -210,6 +213,19 @@ def quiz(user_id, day):
 
         current_task = tasks[current_task_index]
         task_answers = {k: v for k, v in answers.items() if k.startswith(f"{current_task['unit']}_{current_task['type']}_")}
+
+        # 生成问题并合并用户答案
+        questions = {}
+        for subtype in current_task["subtypes"]:
+            key = f"{current_task['unit']}_{current_task['type']}_{subtype}"
+            q_list = flow_controller.quiz_manager.get_questions(current_task["unit"], current_task["type"], subtype)
+            for i, q in enumerate(q_list):
+                q["id"] = f"{current_task['unit']}_{current_task['type']}_{subtype}_{i}"
+                if q["id"] in task_answers:
+                    q["user_answer"] = task_answers[q["id"]]
+            questions[key] = q_list
+        print(f"Generated questions with user answers for task {current_task}: {questions}")
+
         result = flow_controller.handle_review(user_state, current_task, task_answers)
         print(f"Task {current_task_index + 1}/{len(tasks)} result: {result}")
 
@@ -217,11 +233,9 @@ def quiz(user_id, day):
         threshold = 0.6 if current_task["attempt"] <= 1 else 0.7 if current_task["attempt"] == 2 else 0.8
         print(f"Correct rate: {correct_rate}, Threshold: {threshold}")
 
-        # 确定需要跳转的视频 day 和返回的 day
         video_day = day
-        return_day = day  # 默认返回当前 day
+        return_day = day
         if current_task["attempt"] > 0 and correct_rate < threshold:
-            # 复习任务失败，找到初学任务的 day
             unit = current_task["unit"]
             content_type = current_task["type"]
             for past_day in range(1, day):
@@ -229,19 +243,17 @@ def quiz(user_id, day):
                 for task in past_tasks:
                     if task["unit"] == unit and task["type"] == content_type and task["attempt"] == 0:
                         video_day = past_day
-                        return_day = day  # 记录返回到当前 day（例如 Day 2）
+                        return_day = day
                         print(f"Found initial learning day for {unit}_{content_type}: Day {video_day}")
                         break
                 if video_day != day:
                     break
 
-        # 重置 video_watched
         if correct_rate < threshold:
             if "video_watched" in user_state and str(video_day) in user_state["video_watched"]:
                 user_state["video_watched"][str(video_day)] = False
                 print(f"Reset video_watched for day {video_day} due to task failure")
 
-        # 保存状态
         user_manager.save_user(user_state)
 
         if correct_rate < threshold:
@@ -250,7 +262,7 @@ def quiz(user_id, day):
                 "next": "video",
                 "user_id": user_id,
                 "day": video_day,
-                "return_day": return_day  # 添加返回的 day
+                "return_day": return_day
             })
         elif correct_rate < 1.0:
             print(f"Correct rate {correct_rate} < 1.0, redirecting to practice")
@@ -258,6 +270,7 @@ def quiz(user_id, day):
         else:
             user_state["current_task_index"] += 1
             print(f"Task {current_task_index + 1} completed, new index: {user_state['current_task_index']}")
+            user_manager.save_user(user_state)  # 确保状态保存
 
             if user_state["current_task_index"] < len(tasks):
                 print(f"Moving to next task, redirecting to quiz")
@@ -279,7 +292,7 @@ def quiz(user_id, day):
                     print(f"Rest day for day {next_day}, redirecting to rest")
                     return jsonify({"next": "rest", "user_id": user_id, "day": next_day})
                 else:
-                    if any(task["attempt"] == 0 for task in next_tasks):
+                    if any(task["attempt"] == 0 for task in next_tasks) and next_day != 26:
                         print(f"Next day {next_day} is initial learning, redirecting to video")
                         return jsonify({"next": "video", "user_id": user_id, "day": next_day})
                     print(f"Next day {next_day} is quiz, redirecting to quiz")

@@ -1,7 +1,7 @@
 {
     "user_id": "aaa",
     "style": "analytic_verbal",
-    "current_day": 4,
+    "current_day": 10,
     "progress": "started",
     "units": {
         "unit1": {
@@ -19,35 +19,13 @@
                     },
                     {
                         "day": 4,
-                        "correct_rate": 0.5714285714285714,
-                        "wrong_questions": [
-                            {
-                                "id": "unit1_word_choice_0",
-                                "question": "1. 书本的英文是？",
-                                "options": [
-                                    "book",
-                                    "ruler"
-                                ],
-                                "answer": "book",
-                                "user_answer": "pencil"
-                            },
-                            {
-                                "id": "unit1_word_choice_5",
-                                "question": "Match: schoolbag",
-                                "options": [
-                                    "书包",
-                                    "铅笔"
-                                ],
-                                "answer": "书包",
-                                "user_answer": null
-                            },
-                            {
-                                "id": "unit1_word_choice_6",
-                                "question": "Read: pencil",
-                                "answer": "pencil",
-                                "user_answer": null
-                            }
-                        ]
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 8,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             },
@@ -57,13 +35,29 @@
                         "day": 3,
                         "correct_rate": 1.0,
                         "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             }
         },
         "unit2": {
             "word": {
-                "attempts": []
+                "attempts": [
+                    {
+                        "day": 9,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
             },
             "sentence": {
                 "attempts": []
@@ -73,7 +67,8 @@
     "video_watched": {
         "1": true,
         "3": true,
-        "4": true
+        "4": true,
+        "9": true
     },
     "current_task_index": 0
 }

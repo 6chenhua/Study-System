@@ -1,7 +1,7 @@
 {
     "user_id": "aa",
     "style": "analytic_verbal",
-    "current_day": 2,
+    "current_day": 5,
     "progress": "started",
     "units": {
         "unit1": {
@@ -14,30 +14,29 @@
                     },
                     {
                         "day": 2,
-                        "correct_rate": 0.6666666666666666,
-                        "wrong_questions": [
-                            {
-                                "id": "unit1_word_choice_0",
-                                "question": "1. 书本的英文是？",
-                                "options": [
-                                    "book",
-                                    "ruler"
-                                ],
-                                "answer": "book",
-                                "user_answer": "pencil"
-                            },
-                            {
-                                "id": "unit1_word_choice_5",
-                                "question": "Read: pencil",
-                                "answer": "pencil",
-                                "user_answer": null
-                            }
-                        ]
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             },
             "sentence": {
-                "attempts": []
+                "attempts": [
+                    {
+                        "day": 3,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
             }
         },
         "unit2": {
@@ -50,7 +49,8 @@
         }
     },
     "video_watched": {
-        "1": true
+        "1": true,
+        "3": true
     },
     "current_task_index": 0
 }

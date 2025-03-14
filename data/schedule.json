@@ -19,7 +19,7 @@
         "6": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},
         "8": {"word": ["choice", "read_aloud", "spelling"], "sentence": []},
         "9": {"word": ["choice"], "sentence": []},
-        "10": {"word": ["choice", "read_aloud"], "sentence": []},
+        "10": {"word": ["choice", "read_aloud"], "sentence": ["read_aloud", "choice"]},
         "11": {"word": [], "sentence": ["choice"]},
         "12": {"word": ["choice", "matching", "read_aloud"], "sentence": ["read_aloud", "choice"]},
         "14": {"word": [], "sentence": ["read_aloud", "matching", "choice"]},

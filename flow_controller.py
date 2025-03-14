@@ -160,27 +160,31 @@ class FlowController:
         while len(attempts) <= attempt_idx:
             attempts.append({"day": user_state["current_day"], "correct_rate": 0.0, "wrong_questions": []})
 
-        # 计算所有题目的正确率（不按 subtype 分组）
+        # 计算所有题目的正确率（按 subtype 分组生成一致的 ID）
         questions = []
         for subtype in task["subtypes"]:
-            questions.extend(self.quiz_manager.get_questions(unit, content_type, subtype))
+            q_list = self.quiz_manager.get_questions(unit, content_type, subtype)
+            for i, q in enumerate(q_list):
+                # 与 /quiz 中的 ID 生成保持一致
+                q["id"] = f"{unit}_{content_type}_{subtype}_{i}"
+            questions.extend(q_list)
 
         correct_count = 0
         wrong_questions = []
-        for i, q in enumerate(questions):
-            q_id = f"{unit}_{content_type}_{task['subtypes'][0]}_{i}"  # 使用 subtype[0] 仅为 ID 前缀
+        for q in questions:
+            q_id = q["id"]  # 使用预生成的 ID
             expected_answer = q["answer"]
             submitted_answer = answers.get(q_id)
             if submitted_answer == expected_answer:
                 correct_count += 1
             else:
-                q["id"] = q_id
                 q["user_answer"] = submitted_answer if submitted_answer is not None else None
                 wrong_questions.append(q)
 
         question_count = len(questions)
         correct_rate = correct_count / question_count if question_count > 0 else 1.0
-        print(f"Review {unit}_{content_type}: correct_count={correct_count}, question_count={question_count}, correct_rate={correct_rate}")
+        print(
+            f"Review {unit}_{content_type}: correct_count={correct_count}, question_count={question_count}, correct_rate={correct_rate}")
 
         # 更新 attempt 数据
         attempts[attempt_idx] = {
