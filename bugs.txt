@@ -12,6 +12,10 @@ day 4很多问题 √
 
 没有spell效果
 
-day26 有video，但是不需要
+day26 有video，但是不需要 √
 
 每个practice页面应该要能够返回对应的学习视频？否则太不人性化
+
+完成每一天的任务后需要有鼓励的页面？
+
+practice不能跳转到下一个task quiz  √

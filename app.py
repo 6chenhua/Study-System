@@ -66,8 +66,7 @@ def video(user_id, day):
         video_paths = []
         for task in tasks:
             if task["attempt"] == 0:  # 仅初学任务有视频
-                video_path = f"videos/{user_state['style']}/{task['unit']}_{task['type']}_day{day}.mp4"
-                print('=*100')
+                video_path = f"/static/videos/{user_state['style']}/{task['unit']}_{task['type']}_day{day}.mp4"
                 video_paths.append(video_path)
         if not video_paths:
             print(f"No video available for day {day}, redirecting to quiz")
@@ -302,6 +301,7 @@ def quiz(user_id, day):
 @app.route("/practice/<user_id>/<int:day>", methods=["GET", "POST"])
 def practice(user_id, day):
     user_state = user_manager.load_user(user_id)
+    print(f"Loaded user_state in /practice: {user_state}")  # 添加日志，检查加载状态
     if not user_state or user_state["progress"] == "completed":
         print(f"User {user_id} not found or course completed")
         return redirect(url_for("index"))
@@ -317,8 +317,10 @@ def practice(user_id, day):
     if "current_task_index" not in user_state or user_state["current_day"] != day:
         user_state["current_task_index"] = 0
         user_state["current_day"] = day
+        user_manager.save_user(user_state)
         print(f"Reset current_task_index to 0 for day {day}")
     current_task_index = user_state["current_task_index"]
+    print(f"Current task index: {current_task_index}, Total tasks: {len(tasks)}")
 
     if request.method == "GET":
         if current_task_index >= len(tasks):
@@ -364,6 +366,7 @@ def practice(user_id, day):
         if result["correct_rate"] == 1.0:
             user_state["current_task_index"] += 1
             print(f"All correct, new index: {user_state['current_task_index']}")
+            user_manager.save_user(user_state)  # 确保状态保存
 
             if user_state["current_task_index"] >= len(tasks):
                 next_day = day + 1
@@ -384,10 +387,12 @@ def practice(user_id, day):
                         return jsonify({"next": "video", "user_id": user_id, "day": next_day})
                     return jsonify({"next": "quiz", "user_id": user_id, "day": next_day})
             else:
+                print(f"Moving to next task quiz")
                 return jsonify({"next": "quiz", "user_id": user_id, "day": day})
         else:
             print(f"Not all correct, staying on practice")
             return jsonify({"next": "practice", "user_id": user_id, "day": day})
+
 
 
 
