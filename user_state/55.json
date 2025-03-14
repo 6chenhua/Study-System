@@ -1,0 +1,93 @@
+{
+    "user_id": "55",
+    "style": "analytic_verbal",
+    "current_day": 8,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rates": {
+                            "choice": 1.0
+                        },
+                        "wrong_questions": {}
+                    },
+                    {
+                        "day": 2,
+                        "correct_rates": {
+                            "choice": 1.0,
+                            "read_aloud": 1.0
+                        },
+                        "wrong_questions": {}
+                    },
+                    {
+                        "day": 4,
+                        "correct_rates": {
+                            "choice": 1.0,
+                            "matching": 1.0,
+                            "read_aloud": 1.0
+                        },
+                        "wrong_questions": {}
+                    },
+                    {
+                        "day": 8,
+                        "correct_rate": 0.8571428571428571,
+                        "wrong_questions": {
+                            "choice": [
+                                {
+                                    "id": "unit1_word_choice_0",
+                                    "question": "1. 书本的英文是？",
+                                    "options": [
+                                        "book",
+                                        "ruler"
+                                    ],
+                                    "answer": "book"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 3,
+                        "correct_rates": {
+                            "choice": 1.0
+                        },
+                        "wrong_questions": {}
+                    },
+                    {
+                        "day": 4,
+                        "correct_rates": {
+                            "read_aloud": 1.0,
+                            "choice": 1.0
+                        },
+                        "wrong_questions": {}
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 1.0,
+                        "wrong_questions": {}
+                    }
+                ]
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": false,
+        "3": false,
+        "6": false
+    },
+    "current_task_index": 0
+}
