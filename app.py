@@ -49,32 +49,57 @@ def index():
 
     return render_template("index.html")
 
-@app.route("/video/<user_id>/<int:day>")
+@app.route("/video/<user_id>/<int:day>", methods=["GET", "POST"])
 def video(user_id, day):
     user_state = user_manager.load_user(user_id)
-    if not user_state or user_state["progress"] == "completed":
+    if not user_state:
+        print(f"User {user_id} not found, redirecting to index")
         return redirect(url_for("index"))
 
     tasks = schedule_manager.get_tasks(day)
     if not tasks:
-        user_state["current_day"] += 1
-        user_manager.save_user(user_state)
-        return redirect(url_for("video", user_id=user_id, day=user_state["current_day"]))
+        print(f"No tasks for day {day}, redirecting to index")
+        return redirect(url_for("index"))
 
-    video_paths = [f"/static/videos/{user_state['style']}_{task['unit']}_{task['type']}_day{day}.mp4" for task in tasks]
-    return render_template("video.html", video_paths=video_paths, user_id=user_id, day=day)
+    if request.method == "GET":
+        # 生成视频路径（假设基于 unit 和 type）
+        video_paths = []
+        for task in tasks:
+            if task["attempt"] == 0:  # 仅初学任务有视频
+                video_path = f"/static/videos/analytic_verbal_{task['unit']}_{task['type']}_day{day}.mp4"
+                video_paths.append(video_path)
+        if not video_paths:
+            print(f"No video available for day {day}, redirecting to quiz")
+            return redirect(url_for("quiz", user_id=user_id, day=day))
+
+        return render_template("video.html", user_id=user_id, day=day, video_paths=video_paths)
+
+    elif request.method == "POST":
+        # 更新 video_watched 状态
+        if "video_watched" not in user_state:
+            user_state["video_watched"] = {}
+        user_state["video_watched"][str(day)] = True
+        user_manager.save_user(user_state)
+
+        # 从查询参数或 JSON 中获取 return_day（如果有）
+        return_day = request.args.get("return_day", day, type=int)  # 默认返回当前 day
+        print(f"Video watched for day {day}, redirecting to quiz for day {return_day}")
+        return jsonify({"next": "quiz", "user_id": user_id, "day": return_day, "status": "success"})
 
 @app.route("/update_video_watched/<user_id>/<int:day>", methods=["POST"])
 def update_video_watched(user_id, day):
     user_state = user_manager.load_user(user_id)
     if not user_state:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"status": "error", "message": "User not found"}), 404
 
     if "video_watched" not in user_state:
         user_state["video_watched"] = {}
     user_state["video_watched"][str(day)] = True
     user_manager.save_user(user_state)
-    return jsonify({"status": "success"})
+
+    return_day = request.args.get("return_day", day, type=int)
+    print(f"Updated video_watched for day {day}, redirecting to quiz for day {return_day}")
+    return jsonify({"status": "success", "next": "quiz", "user_id": user_id, "day": return_day})
 
 @app.route("/next_day/<user_id>/<int:day>")
 def next_day(user_id, day):
@@ -173,7 +198,7 @@ def quiz(user_id, day):
             key = f"{current_task['unit']}_{current_task['type']}_{subtype}"
             q_list = flow_controller.quiz_manager.get_questions(current_task["unit"], current_task["type"], subtype)
             for i, q in enumerate(q_list):
-                q["id"] = f"{current_task['unit']}_{current_task['type']}_{current_task['subtypes'][0]}_{i}"  # 统一 ID 前缀
+                q["id"] = f"{current_task['unit']}_{current_task['type']}_{current_task['subtypes'][0]}_{i}"
             questions[key] = q_list
         task_info = [{"unit": current_task["unit"], "type": current_task["type"], "attempt": current_task["attempt"]}]
         print(f"Generated questions for task {current_task}: {questions}")
@@ -192,17 +217,41 @@ def quiz(user_id, day):
         threshold = 0.6 if current_task["attempt"] <= 1 else 0.7 if current_task["attempt"] == 2 else 0.8
         print(f"Correct rate: {correct_rate}, Threshold: {threshold}")
 
-        if current_task["attempt"] == 0 and correct_rate < threshold:
-            if "video_watched" in user_state and str(day) in user_state["video_watched"]:
-                user_state["video_watched"][str(day)] = False
-                print(f"Reset video_watched for day {day} due to initial task failure")
+        # 确定需要跳转的视频 day 和返回的 day
+        video_day = day
+        return_day = day  # 默认返回当前 day
+        if current_task["attempt"] > 0 and correct_rate < threshold:
+            # 复习任务失败，找到初学任务的 day
+            unit = current_task["unit"]
+            content_type = current_task["type"]
+            for past_day in range(1, day):
+                past_tasks = schedule_manager.get_tasks(past_day)
+                for task in past_tasks:
+                    if task["unit"] == unit and task["type"] == content_type and task["attempt"] == 0:
+                        video_day = past_day
+                        return_day = day  # 记录返回到当前 day（例如 Day 2）
+                        print(f"Found initial learning day for {unit}_{content_type}: Day {video_day}")
+                        break
+                if video_day != day:
+                    break
+
+        # 重置 video_watched
+        if correct_rate < threshold:
+            if "video_watched" in user_state and str(video_day) in user_state["video_watched"]:
+                user_state["video_watched"][str(video_day)] = False
+                print(f"Reset video_watched for day {video_day} due to task failure")
 
         # 保存状态
         user_manager.save_user(user_state)
 
         if correct_rate < threshold:
-            print(f"Correct rate {correct_rate} < threshold {threshold}, redirecting to video")
-            return jsonify({"next": "video", "user_id": user_id, "day": day})
+            print(f"Correct rate {correct_rate} < threshold {threshold}, redirecting to video for Day {video_day}")
+            return jsonify({
+                "next": "video",
+                "user_id": user_id,
+                "day": video_day,
+                "return_day": return_day  # 添加返回的 day
+            })
         elif correct_rate < 1.0:
             print(f"Correct rate {correct_rate} < 1.0, redirecting to practice")
             return jsonify({"next": "practice", "user_id": user_id, "day": day})

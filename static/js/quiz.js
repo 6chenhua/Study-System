@@ -17,7 +17,11 @@ document.getElementById("quizForm").addEventListener("submit", function(e) {
     .then(data => {
         console.log("Server response:", data);
         if (data.next === "video") {
-            window.location.href = `/video/${data.user_id}/${data.day}`;
+            // 如果有 return_day 参数，附加到 URL 中
+            const videoUrl = data.return_day
+                ? `/video/${data.user_id}/${data.day}?return_day=${data.return_day}`
+                : `/video/${data.user_id}/${data.day}`;
+            window.location.href = videoUrl;
         } else if (data.next === "practice") {
             window.location.href = `/practice/${data.user_id}/${data.day}`;
         } else if (data.next === "quiz") {

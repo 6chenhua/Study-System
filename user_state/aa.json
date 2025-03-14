@@ -14,7 +14,7 @@
                     },
                     {
                         "day": 2,
-                        "correct_rate": 0.3333333333333333,
+                        "correct_rate": 0.6666666666666666,
                         "wrong_questions": [
                             {
                                 "id": "unit1_word_choice_0",
@@ -25,26 +25,6 @@
                                 ],
                                 "answer": "book",
                                 "user_answer": "pencil"
-                            },
-                            {
-                                "id": "unit1_word_choice_2",
-                                "question": "3. 书本的英文是？",
-                                "options": [
-                                    "book",
-                                    "ruler"
-                                ],
-                                "answer": "book",
-                                "user_answer": "ruler"
-                            },
-                            {
-                                "id": "unit1_word_choice_3",
-                                "question": "4. 书本的英文是？",
-                                "options": [
-                                    "book",
-                                    "ruler"
-                                ],
-                                "answer": "book",
-                                "user_answer": "ruler"
                             },
                             {
                                 "id": "unit1_word_choice_5",

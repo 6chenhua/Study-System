@@ -16,15 +16,19 @@
     <button onclick="startQuiz()">Start Quiz</button>
     <script>
         async function startQuiz() {
-            // 发送请求更新 video_watched
-            const response = await fetch(`/update_video_watched/{{ user_id }}/{{ day }}`, {
+            // 获取 URL 中的 return_day 参数（如果有）
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnDay = urlParams.get('return_day') || '{{ day }}';
+
+            // 发送请求更新 video_watched，传递 return_day
+            const response = await fetch(`/update_video_watched/{{ user_id }}/{{ day }}?return_day=${returnDay}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
             const result = await response.json();
             if (result.status === 'success') {
-                // 更新成功后跳转到测验页面
-                window.location.href = `/quiz/{{ user_id }}/{{ day }}`;
+                // 使用返回的 day 跳转到测验页面
+                window.location.href = `/quiz/{{ user_id }}/${result.day}`;
             } else {
                 alert('Failed to update video status');
             }
