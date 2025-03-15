@@ -1,7 +1,7 @@
 {
-    "user_id": "i",
+    "user_id": "zzj",
     "style": "analytic_verbal",
-    "current_day": 11,
+    "current_day": 10,
     "progress": "started",
     "units": {
         "unit1": {
@@ -64,8 +64,15 @@
                     },
                     {
                         "day": 10,
-                        "correct_rate": 1.0,
-                        "wrong_questions": []
+                        "correct_rate": 0.5,
+                        "wrong_questions": [
+                            {
+                                "question": "Read: nose",
+                                "answer": "nose",
+                                "id": "unit2_word_read_aloud_0",
+                                "user_answer": "Norris"
+                            }
+                        ]
                     }
                 ]
             },
@@ -77,8 +84,7 @@
     "video_watched": {
         "1": true,
         "3": true,
-        "9": true,
-        "11": true
+        "9": true
     },
-    "current_task_index": 0
+    "current_task_index": 1
 }

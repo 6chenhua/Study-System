@@ -12,7 +12,7 @@
                 {"question": "Match: schoolbag", "options": ["书包", "铅笔"], "answer": "书包"}
             ],
             "read_aloud": [
-                {"question": "Read: pencil", "answer": "pencil"}
+                {"question": "Read: 'I have a pencil.'", "answer": "I have a pencil."}
             ],
             "spelling": [
                 {"question": "Spell: 尺子", "answer": "ruler"}
@@ -39,7 +39,7 @@
                 {"question": "Match: mouth", "options": ["嘴巴", "鼻子"], "answer": "嘴巴"}
             ],
             "read_aloud": [
-                {"question": "Read: nose", "answer": "nose"}
+                {"question": "Read: nose", "answer": "Nose"}
             ],
             "spelling": [
                 {"question": "Spell: 眼睛", "answer": "eye"}

@@ -1,0 +1,46 @@
+{
+    "user_id": "y",
+    "style": "analytic_verbal",
+    "current_day": 2,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 2,
+                        "correct_rate": 0.8333333333333334,
+                        "wrong_questions": [
+                            {
+                                "question": "Read: pencil",
+                                "answer": "pencil",
+                                "id": "unit1_word_read_aloud_0",
+                                "user_answer": ""
+                            }
+                        ]
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": true
+    },
+    "current_task_index": 0
+}

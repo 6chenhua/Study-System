@@ -4,6 +4,7 @@ from user_manager import UserManager
 from schedule_manager import ScheduleManager
 from quiz_manager import QuizManager
 from flow_controller import FlowController
+from utils.speech import recognize_speech  # 新增：导入语音识别模块
 
 app = Flask(__name__)
 
@@ -85,7 +86,6 @@ def video(user_id, day):
         return_day = request.args.get("return_day", day, type=int)  # 默认返回当前 day
         print(f"Video watched for day {day}, redirecting to quiz for day {return_day}")
         return jsonify({"next": "quiz", "user_id": user_id, "day": return_day, "status": "success"})
-
 
 
 @app.route("/update_video_watched/<user_id>/<int:day>", methods=["POST"])
@@ -234,11 +234,26 @@ def quiz(user_id, day):
         return render_template("quiz.html", user_id=user_id, day=day, questions=questions, tasks=task_info)
 
     elif request.method == "POST":
-        answers = request.json["answers"]
-        print(f"Received answers: {answers}")
+        # 修改：支持 FormData，处理普通答案和音频文件
+        answers = {}
+
+        # 处理普通答案（文本、选择题等）
+        for key in request.form:
+            answers[key] = request.form[key]
+            print(f"Received form answer for {key}: {answers[key]}")
+
+        # 处理音频文件（read_aloud）
+        for key in request.files:
+            audio_file = request.files[key]
+            print(f"Received audio file for {key}: {audio_file.filename}")
+            recognized_text = recognize_speech(audio_file)
+            answers[key] = recognized_text if recognized_text else ""
+            print(f"Recognized text for {key}: {answers[key]}")
 
         current_task = tasks[current_task_index]
-        task_answers = {k: v for k, v in answers.items() if k.startswith(f"{current_task['unit']}_{current_task['type']}_")}
+        task_answers = {k: v for k, v in answers.items() if
+                        k.startswith(f"{current_task['unit']}_{current_task['type']}_")}
+        print(f"Filtered task answers: {task_answers}")
 
         questions = {}
         for subtype in current_task["subtypes"]:
@@ -374,16 +389,35 @@ def practice(user_id, day):
             user_manager.save_user(user_state)
             return redirect(url_for("quiz", user_id=user_id, day=day))
 
-        task_info = [{"unit": current_task["unit"], "type": current_task["type"], "attempt": current_task["attempt"]}]
-        print(f"Rendering practice with questions: {questions}")
+        # 修改：将 subtypes 包含在 task_info 中
+        task_info = [{
+            "unit": current_task["unit"],
+            "type": current_task["type"],
+            "attempt": current_task["attempt"],
+            "subtypes": current_task.get("subtypes", [])  # 确保 subtypes 被传递
+        }]
+        print(f"Rendering practice with questions: {questions}, task_info: {task_info}")
         return render_template("practice.html", user_id=user_id, day=day, questions=questions, tasks=task_info)
 
+    # POST 处理保持不变
     elif request.method == "POST":
-        answers = request.json["answers"]
-        print(f"Received answers: {answers}")
+        answers = {}
+        for key in request.form:
+            answers[key] = request.form[key]
+            print(f"Received form answer for {key}: {answers[key]}")
+        if "read_aloud" in tasks[current_task_index]["subtypes"]:
+            for key in request.files:
+                audio_file = request.files[key]
+                print(f"Received audio file for {key}: {audio_file.filename}")
+                recognized_text = recognize_speech(audio_file)
+                answers[key] = recognized_text if recognized_text else ""
+                print(f"Recognized text for {key}: {answers[key]}")
 
         current_task = tasks[current_task_index]
-        result = flow_controller.handle_practice(user_state, current_task, answers)
+        task_answers = {k: v for k, v in answers.items() if k.startswith(f"{current_task['unit']}_{current_task['type']}_")}
+        print(f"Filtered task answers: {task_answers}")
+
+        result = flow_controller.handle_practice(user_state, current_task, task_answers)
         print(f"Practice result: {result}")
 
         user_manager.save_user(user_state)
@@ -391,7 +425,6 @@ def practice(user_id, day):
             user_state["current_task_index"] += 1
             print(f"All correct, new index: {user_state['current_task_index']}")
             user_manager.save_user(user_state)
-
             if user_state["current_task_index"] >= len(tasks):
                 next_day = day + 1
                 next_tasks = schedule_manager.get_tasks(next_day)
@@ -399,7 +432,6 @@ def practice(user_id, day):
                 user_state["current_task_index"] = 0
                 user_state["current_day"] = next_day
                 user_manager.save_user(user_state)
-
                 if not next_tasks:
                     if next_day > schedule_manager.schedule["combined"]:
                         user_state["progress"] = "completed"
@@ -416,6 +448,7 @@ def practice(user_id, day):
         else:
             print(f"Not all correct, staying on practice")
             return jsonify({"next": "practice", "user_id": user_id, "day": day})
+
 
 
 if __name__ == "__main__":

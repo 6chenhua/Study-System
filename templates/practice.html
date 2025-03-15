@@ -1,9 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Practice - Day {{ day }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .question {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4169e1;
+        }
+        .recording-btn.recording {
+            background-color: #ff4500;
+        }
+    </style>
 </head>
 <body>
     <h1>Day {{ day }} - Practice</h1>
@@ -25,8 +51,11 @@
                                 <input type="radio" name="{{ question.id }}" value="{{ option }}"> {{ option }}<br>
                             {% endfor %}
                         {% endif %}
+                    {% elif "read_aloud" in tasks[0].subtypes %}
+                        <button type="button" class="recording-btn" data-question-id="{{ question.id }}">开始录音</button>
+                        <span class="recording-status"></span>
                     {% else %}
-                        <input type="text" name="{{ question.id }}">
+                        <input type="text" name="{{ question.id }}" placeholder="Type your answer">
                     {% endif %}
                 </div>
             {% endfor %}
@@ -34,6 +63,102 @@
         <button type="submit">Submit</button>
     </form>
 
-    <script src="{{ url_for('static', filename='js/practice.js') }}"></script>
+    <script type="module">
+            import recorder from '/static/js/recorder.js';
+
+            const form = document.getElementById('practiceForm');
+            const audioData = new Map();
+
+            const recordingButtons = document.querySelectorAll('.recording-btn');
+            console.log("Found recording buttons:", recordingButtons.length);
+            recordingButtons.forEach(btn => {
+                const questionId = btn.dataset.questionId;
+                const status = btn.nextElementSibling;
+                let isRecording = false; // Local state instead of recorder.getRecordingState
+
+                console.log("Binding event to button with questionId:", questionId);
+
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    console.log("Button clicked for questionId:", questionId);
+                    if (!isRecording) {
+                        try {
+                            const success = await recorder.startRecording();
+                            console.log("Start recording result:", success);
+                            if (success) {
+                                btn.textContent = "停止录音";
+                                btn.classList.add('recording');
+                                status.textContent = "正在录音...";
+                                isRecording = true;
+                                recorder.setOnRecordingComplete((audioBlob) => {
+                                    audioData.set(questionId, audioBlob);
+                                    status.textContent = "录音完成";
+                                    console.log("Recording completed for:", questionId);
+                                    isRecording = false;
+                                });
+                            }
+                        } catch (err) {
+                            console.error("Recording failed:", err);
+                            status.textContent = "录音失败";
+                        }
+                    } else {
+                        recorder.stopRecording();
+                        btn.textContent = "开始录音";
+                        btn.classList.remove('recording');
+                        console.log("Recording stopped for:", questionId);
+                        isRecording = false;
+                    }
+                });
+            });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userId = form.dataset.userId;
+            const day = form.dataset.day;
+            const formData = new FormData();
+
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'radio' && input.checked) {
+                    formData.append(input.name, input.value);
+                } else if (input.type === 'text' && input.value.trim()) {
+                    formData.append(input.name, input.value.trim());
+                } else if (input.tagName === 'SELECT') {
+                    formData.append(input.name, input.value);
+                }
+            });
+
+            audioData.forEach((blob, questionId) => {
+                formData.append(questionId, blob, `${questionId}.webm`);
+            });
+
+            try {
+                const response = await fetch(`/practice/${userId}/${day}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                console.log("Practice response:", data);
+
+                if (data.next === "video") {
+                    window.location.href = `/video/${userId}/${data.day}?return_day=${data.return_day}`;
+                } else if (data.next === "practice") {
+                    window.location.href = `/practice/${userId}/${data.day}`;
+                } else if (data.next === "quiz") {
+                    window.location.href = `/quiz/${userId}/${data.day}`;
+                } else if (data.next === "encourage") {
+                    window.location.href = `/encourage/${userId}/${data.day}`;
+                } else if (data.next === "done") {
+                    window.location.href = `/done/${userId}`;
+                } else {
+                    console.error("Unknown next:", data.next);
+                    alert("未知的跳转目标，请联系管理员");
+                }
+            } catch (error) {
+                console.error("Error submitting practice:", error);
+                alert("提交练习失败，请检查网络连接");
+            }
+        });
+    </script>
 </body>
 </html>

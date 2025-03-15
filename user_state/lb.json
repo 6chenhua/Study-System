@@ -1,7 +1,7 @@
 {
-    "user_id": "i",
+    "user_id": "lb",
     "style": "analytic_verbal",
-    "current_day": 11,
+    "current_day": 6,
     "progress": "started",
     "units": {
         "unit1": {
@@ -21,11 +21,6 @@
                         "day": 4,
                         "correct_rate": 1.0,
                         "wrong_questions": []
-                    },
-                    {
-                        "day": 8,
-                        "correct_rate": 1.0,
-                        "wrong_questions": []
                     }
                 ]
             },
@@ -40,34 +35,13 @@
                         "day": 4,
                         "correct_rate": 1.0,
                         "wrong_questions": []
-                    },
-                    {
-                        "day": 6,
-                        "correct_rate": 1.0,
-                        "wrong_questions": []
-                    },
-                    {
-                        "day": 10,
-                        "correct_rate": 1.0,
-                        "wrong_questions": []
                     }
                 ]
             }
         },
         "unit2": {
             "word": {
-                "attempts": [
-                    {
-                        "day": 9,
-                        "correct_rate": 1.0,
-                        "wrong_questions": []
-                    },
-                    {
-                        "day": 10,
-                        "correct_rate": 1.0,
-                        "wrong_questions": []
-                    }
-                ]
+                "attempts": []
             },
             "sentence": {
                 "attempts": []
@@ -76,9 +50,7 @@
     },
     "video_watched": {
         "1": true,
-        "3": true,
-        "9": true,
-        "11": true
+        "3": true
     },
     "current_task_index": 0
 }

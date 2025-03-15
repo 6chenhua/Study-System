@@ -26,6 +26,9 @@
         button:hover {
             background-color: #4169e1;
         }
+        .recording-btn.recording {
+            background-color: #ff4500;
+        }
     </style>
 </head>
 <body>
@@ -48,8 +51,10 @@
                                 <input type="radio" name="{{ question.id }}" value="{{ option }}"> {{ option }}<br>
                             {% endfor %}
                         {% endif %}
+                    {% elif "read_aloud" in key %}
+                        <button type="button" class="recording-btn" data-question-id="{{ question.id }}">开始录音</button>
+                        <span class="recording-status"></span>
                     {% else %}
-                        <!-- 为 read_aloud 添加文本输入 -->
                         <input type="text" name="{{ question.id }}" placeholder="Type your answer">
                     {% endif %}
                 </div>
@@ -58,40 +63,80 @@
         <button type="submit">Submit</button>
     </form>
 
-    <script>
-        document.getElementById('quizForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // 阻止表单默认提交
+    <script type="module">
+        import recorder from '/static/js/recorder.js';
 
-            const form = this;
+        const form = document.getElementById('quizForm');
+        const audioData = new Map(); // 存储录音数据
+
+        // 为每个 read_aloud 题目绑定录音功能
+        document.querySelectorAll('.recording-btn').forEach(btn => {
+            const questionId = btn.dataset.questionId;
+            const status = btn.nextElementSibling;
+            let isRecording = false;
+
+            btn.addEventListener('click', async () => {
+                if (!isRecording) {
+                    const success = await recorder.startRecording();
+                    if (success) {
+                        btn.textContent = "停止录音";
+                        btn.classList.add('recording');
+                        status.textContent = "正在录音...";
+                        isRecording = true;
+
+                        recorder.setOnRecordingComplete((audioBlob) => {
+                            audioData.set(questionId, audioBlob);
+                            status.textContent = "录音完成";
+                        });
+                    }
+                } else {
+                    recorder.stopRecording();
+                    btn.textContent = "开始录音";
+                    btn.classList.remove('recording');
+                    isRecording = false;
+                }
+            });
+        });
+
+        // 表单提交
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
             const userId = form.dataset.userId;
             const day = form.dataset.day;
-            const answers = {};
+            const formData = new FormData();
+
+            // 收集普通答案
             const inputs = form.querySelectorAll('input, select');
             inputs.forEach(input => {
                 if (input.type === 'radio' && input.checked) {
-                    answers[input.name] = input.value;
+                    formData.append(input.name, input.value);
                 } else if (input.type === 'text' && input.value.trim()) {
-                    answers[input.name] = input.value.trim();
+                    formData.append(input.name, input.value.trim());
                 } else if (input.tagName === 'SELECT') {
-                    answers[input.name] = input.value;
+                    formData.append(input.name, input.value);
                 }
+            });
+
+            // 添加录音数据
+            audioData.forEach((blob, questionId) => {
+                formData.append(questionId, blob, `${questionId}.webm`);
             });
 
             try {
                 const response = await fetch(`/quiz/${userId}/${day}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ answers })
+                    body: formData
                 });
                 const data = await response.json();
-                console.log("Quiz response:", data); // 调试：检查后端返回的 JSON
+                console.log("Quiz response:", data);
 
                 if (data.next === "video") {
                     window.location.href = `/video/${userId}/${data.day}?return_day=${data.return_day}`;
                 } else if (data.next === "practice") {
                     window.location.href = `/practice/${userId}/${data.day}`;
                 } else if (data.next === "quiz") {
-                    window.location.href = `/quiz/${userId}/${data.day}`;
+                    window.location.href = `/quiz/${userId}/${day}`;
                 } else if (data.next === "encourage") {
                     window.location.href = `/encourage/${userId}/${data.day}`;
                 } else if (data.next === "done") {
