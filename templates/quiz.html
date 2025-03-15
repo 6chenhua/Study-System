@@ -1,8 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Quiz - Day {{ day }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .question {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4169e1;
+        }
+    </style>
 </head>
 <body>
     <h1>Day {{ day }} - Quiz</h1>
@@ -33,6 +57,54 @@
         {% endfor %}
         <button type="submit">Submit</button>
     </form>
-    <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+
+    <script>
+        document.getElementById('quizForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // 阻止表单默认提交
+
+            const form = this;
+            const userId = form.dataset.userId;
+            const day = form.dataset.day;
+            const answers = {};
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'radio' && input.checked) {
+                    answers[input.name] = input.value;
+                } else if (input.type === 'text' && input.value.trim()) {
+                    answers[input.name] = input.value.trim();
+                } else if (input.tagName === 'SELECT') {
+                    answers[input.name] = input.value;
+                }
+            });
+
+            try {
+                const response = await fetch(`/quiz/${userId}/${day}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers })
+                });
+                const data = await response.json();
+                console.log("Quiz response:", data); // 调试：检查后端返回的 JSON
+
+                if (data.next === "video") {
+                    window.location.href = `/video/${userId}/${data.day}?return_day=${data.return_day}`;
+                } else if (data.next === "practice") {
+                    window.location.href = `/practice/${userId}/${data.day}`;
+                } else if (data.next === "quiz") {
+                    window.location.href = `/quiz/${userId}/${data.day}`;
+                } else if (data.next === "encourage") {
+                    window.location.href = `/encourage/${userId}/${data.day}`;
+                } else if (data.next === "done") {
+                    window.location.href = `/done/${userId}`;
+                } else {
+                    console.error("Unknown next:", data.next);
+                    alert("未知的跳转目标，请联系管理员");
+                }
+            } catch (error) {
+                console.error("Error submitting quiz:", error);
+                alert("提交测验失败，请检查网络连接");
+            }
+        });
+    </script>
 </body>
 </html>

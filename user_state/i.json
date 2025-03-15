@@ -1,0 +1,72 @@
+{
+    "user_id": "i",
+    "style": "analytic_verbal",
+    "current_day": 6,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 2,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 3,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 0.6666666666666666,
+                        "wrong_questions": [
+                            {
+                                "question": "我有一个书包。",
+                                "options": [
+                                    "I have a schoolbag.",
+                                    "I have a teacher."
+                                ],
+                                "answer": "I have a schoolbag.",
+                                "id": "unit1_sentence_choice_0",
+                                "user_answer": "I have a teacher."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": true,
+        "3": true
+    },
+    "current_task_index": 0
+}

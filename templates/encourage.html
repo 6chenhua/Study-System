@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>太棒了！</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            padding: 50px;
+        }
+        h1 {
+            color: #32cd32;
+            font-size: 36px;
+        }
+        p {
+            font-size: 20px;
+            color: #333;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4169e1;
+        }
+    </style>
+</head>
+<body>
+    <h1>太棒了！</h1>
+    <p>你完成了今天的任务，明天继续加油哦！</p>
+    <p>点击下方按钮，准备进入第 {{ next_day }} 天的学习吧！</p>
+    <button onclick="window.location.href='/next_day/{{ user_id }}/{{ day }}'">去第 {{ next_day }} 天</button>
+</body>
+</html>

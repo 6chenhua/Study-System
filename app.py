@@ -86,6 +86,8 @@ def video(user_id, day):
         print(f"Video watched for day {day}, redirecting to quiz for day {return_day}")
         return jsonify({"next": "quiz", "user_id": user_id, "day": return_day, "status": "success"})
 
+
+
 @app.route("/update_video_watched/<user_id>/<int:day>", methods=["POST"])
 def update_video_watched(user_id, day):
     user_state = user_manager.load_user(user_id)
@@ -133,15 +135,37 @@ def next_day(user_id, day):
 
 @app.route("/rest/<user_id>/<int:day>")
 def rest(user_id, day):
-    return render_template("rest.html", user_id=user_id, day=day)
+    user_state = user_manager.load_user(user_id)
+    if not user_state or user_state["progress"] == "completed":
+        print(f"User {user_id} not found or course completed, redirecting to index")
+        return redirect(url_for("index"))
+
+    next_day = day + 1
+    print(f"Showing rest page for user {user_id} on day {day}, next day {next_day}")
+    return render_template("rest.html", user_id=user_id, day=day, next_day=next_day)
+
 
 @app.route("/done/<user_id>")
 def done(user_id):
     return render_template("done.html", user_id=user_id)
 
+
+@app.route("/encourage/<user_id>/<int:day>", methods=["GET"])
+def encourage(user_id, day):
+    user_state = user_manager.load_user(user_id)
+    if not user_state or user_state["progress"] == "completed":
+        print(f"User {user_id} not found or course completed, redirecting to index")
+        return redirect(url_for("index"))
+
+    next_day = day + 1
+    print(f"Showing encouragement page for user {user_id}, completed day {day}, next day {next_day}")
+    return render_template("encourage.html", user_id=user_id, day=day, next_day=next_day)
+
+
 @app.route("/quiz/<user_id>/<int:day>", methods=["GET", "POST"])
 def quiz(user_id, day):
     user_state = user_manager.load_user(user_id)
+    print(f"Loaded user_state in /quiz: {user_state}")
     if not user_state or user_state["progress"] == "completed":
         print(f"User {user_id} not found or course completed, redirecting to index")
         return redirect(url_for("index"))
@@ -149,16 +173,22 @@ def quiz(user_id, day):
     tasks = schedule_manager.get_tasks(day)
     print(f"Tasks for day {day}: {tasks}")
     if not tasks:
-        user_state["current_day"] += 1
+        next_day = day + 1
+        user_state["current_day"] = next_day
         user_manager.save_user(user_state)
-        print(f"No tasks for day {day}, moving to day {user_state['current_day']}, redirecting to index")
-        return redirect(url_for("index"))
+        print(f"No tasks for day {day}, moving to day {next_day}")
+        if next_day > schedule_manager.schedule["combined"]:
+            user_state["progress"] = "completed"
+            user_manager.save_user(user_state)
+            print("Course completed, redirecting to done")
+            return redirect(url_for("done", user_id=user_id))
+        print(f"Day {day} is a rest day, redirecting to rest")
+        return redirect(url_for("rest", user_id=user_id, day=day))
 
-    # 仅在进入新的一天时重置 current_task_index
     if "current_task_index" not in user_state or user_state["current_day"] != day:
         user_state["current_task_index"] = 0
         user_state["current_day"] = day
-        user_manager.save_user(user_state)  # 确保状态保存
+        user_manager.save_user(user_state)
         print(f"Reset current_task_index to 0 for day {day}")
     current_task_index = user_state["current_task_index"]
     print(f"Current task index: {current_task_index}, Total tasks: {len(tasks)}")
@@ -178,14 +208,11 @@ def quiz(user_id, day):
                     user_manager.save_user(user_state)
                     print("Course completed, redirecting to done")
                     return redirect(url_for("done", user_id=user_id))
-                print(f"Rest day for day {next_day}, redirecting to rest")
-                return redirect(url_for("rest", user_id=user_id, day=next_day))
+                print(f"Rest day for day {next_day}, redirecting to encourage")
+                return redirect(url_for("encourage", user_id=user_id, day=day))
             else:
-                if any(task["attempt"] == 0 for task in next_tasks):
-                    print(f"Next day {next_day} is initial learning, redirecting to video")
-                    return redirect(url_for("video", user_id=user_id, day=next_day))
-                print(f"Next day {next_day} is quiz, redirecting to quiz")
-                return redirect(url_for("quiz", user_id=user_id, day=next_day))
+                print(f"Redirecting to encouragement page after completing day {day}")
+                return redirect(url_for("encourage", user_id=user_id, day=day))
 
         current_task = tasks[current_task_index]
         print(f"Processing task {current_task_index + 1}/{len(tasks)}: {current_task}")
@@ -213,7 +240,6 @@ def quiz(user_id, day):
         current_task = tasks[current_task_index]
         task_answers = {k: v for k, v in answers.items() if k.startswith(f"{current_task['unit']}_{current_task['type']}_")}
 
-        # 生成问题并合并用户答案
         questions = {}
         for subtype in current_task["subtypes"]:
             key = f"{current_task['unit']}_{current_task['type']}_{subtype}"
@@ -269,7 +295,7 @@ def quiz(user_id, day):
         else:
             user_state["current_task_index"] += 1
             print(f"Task {current_task_index + 1} completed, new index: {user_state['current_task_index']}")
-            user_manager.save_user(user_state)  # 确保状态保存
+            user_manager.save_user(user_state)
 
             if user_state["current_task_index"] < len(tasks):
                 print(f"Moving to next task, redirecting to quiz")
@@ -288,20 +314,17 @@ def quiz(user_id, day):
                         user_manager.save_user(user_state)
                         print("Course completed, redirecting to done")
                         return jsonify({"next": "done", "user_id": user_id})
-                    print(f"Rest day for day {next_day}, redirecting to rest")
-                    return jsonify({"next": "rest", "user_id": user_id, "day": next_day})
+                    print(f"Rest day for day {next_day}, redirecting to encourage")
+                    return jsonify({"next": "encourage", "user_id": user_id, "day": day})
                 else:
-                    if any(task["attempt"] == 0 for task in next_tasks) and next_day != 26:
-                        print(f"Next day {next_day} is initial learning, redirecting to video")
-                        return jsonify({"next": "video", "user_id": user_id, "day": next_day})
-                    print(f"Next day {next_day} is quiz, redirecting to quiz")
-                    return jsonify({"next": "quiz", "user_id": user_id, "day": next_day})
+                    print(f"Redirecting to encouragement page after completing day {day}")
+                    return jsonify({"next": "encourage", "user_id": user_id, "day": day})
 
 
 @app.route("/practice/<user_id>/<int:day>", methods=["GET", "POST"])
 def practice(user_id, day):
     user_state = user_manager.load_user(user_id)
-    print(f"Loaded user_state in /practice: {user_state}")  # 添加日志，检查加载状态
+    print(f"Loaded user_state in /practice: {user_state}")
     if not user_state or user_state["progress"] == "completed":
         print(f"User {user_id} not found or course completed")
         return redirect(url_for("index"))
@@ -335,14 +358,15 @@ def practice(user_id, day):
                     user_state["progress"] = "completed"
                     user_manager.save_user(user_state)
                     return redirect(url_for("done", user_id=user_id))
-                return redirect(url_for("rest", user_id=user_id, day=next_day))
-            return redirect(url_for("quiz", user_id=user_id, day=next_day))
+                print(f"Rest day for day {next_day}, redirecting to encourage")
+                return redirect(url_for("encourage", user_id=user_id, day=day))
+            print(f"Redirecting to encouragement page after completing day {day}")
+            return redirect(url_for("encourage", user_id=user_id, day=day))
 
         current_task = tasks[current_task_index]
         attempt = user_state["units"][current_task["unit"]][current_task["type"]]["attempts"][current_task["attempt"]]
         print(f"Attempt data for {current_task['unit']}_{current_task['type']}_attempt{current_task['attempt']}: {attempt}")
 
-        # 检查是否需要练习：有错题且正确率 < 1.0
         questions = {current_task["type"]: attempt["wrong_questions"]}
         if not questions[current_task["type"]] or attempt["correct_rate"] == 1.0:
             print(f"No wrong questions or all correct for task {current_task}, moving to next task")
@@ -366,7 +390,7 @@ def practice(user_id, day):
         if result["correct_rate"] == 1.0:
             user_state["current_task_index"] += 1
             print(f"All correct, new index: {user_state['current_task_index']}")
-            user_manager.save_user(user_state)  # 确保状态保存
+            user_manager.save_user(user_state)
 
             if user_state["current_task_index"] >= len(tasks):
                 next_day = day + 1
@@ -381,19 +405,17 @@ def practice(user_id, day):
                         user_state["progress"] = "completed"
                         user_manager.save_user(user_state)
                         return jsonify({"next": "done", "user_id": user_id})
-                    return jsonify({"next": "rest", "user_id": user_id, "day": next_day})
+                    print(f"Rest day for day {next_day}, redirecting to encourage")
+                    return jsonify({"next": "encourage", "user_id": user_id, "day": day})
                 else:
-                    if any(task["attempt"] == 0 for task in next_tasks):
-                        return jsonify({"next": "video", "user_id": user_id, "day": next_day})
-                    return jsonify({"next": "quiz", "user_id": user_id, "day": next_day})
+                    print(f"Redirecting to encouragement page after completing day {day}")
+                    return jsonify({"next": "encourage", "user_id": user_id, "day": day})
             else:
                 print(f"Moving to next task quiz")
                 return jsonify({"next": "quiz", "user_id": user_id, "day": day})
         else:
             print(f"Not all correct, staying on practice")
             return jsonify({"next": "practice", "user_id": user_id, "day": day})
-
-
 
 
 if __name__ == "__main__":

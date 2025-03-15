@@ -1,0 +1,117 @@
+{
+    "user_id": "曰辰",
+    "style": "analytic_verbal",
+    "current_day": 1,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 2,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 8,
+                        "correct_rate": 0.2857142857142857,
+                        "wrong_questions": [
+                            {
+                                "question": "1. 书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_0",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "2. 书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_1",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "3. 书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_2",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "4. 书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_3",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "5. 书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_4",
+                                "user_answer": "ruler"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 3,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": true,
+        "3": true
+    },
+    "current_task_index": 0
+}

@@ -1,36 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Video - Day {{ day }}</title>
+    <title>观看视频 - Day {{ day }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        video {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px auto;
+            display: block;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4169e1;
+        }
+    </style>
 </head>
 <body>
-    <h1>Day {{ day }} Video</h1>
+    <h1>请观看以下视频 - Day {{ day }}</h1>
     {% for video_path in video_paths %}
         <video controls>
             <source src="{{ video_path }}" type="video/mp4">
-            Your browser does not support the video tag.
+            您的浏览器不支持视频播放。
         </video>
-        <br>
     {% endfor %}
-    <button onclick="startQuiz()">Start Quiz</button>
+    <button onclick="startQuiz()">开始测验</button>
+
     <script>
         async function startQuiz() {
-            // 获取 URL 中的 return_day 参数（如果有）
             const urlParams = new URLSearchParams(window.location.search);
             const returnDay = urlParams.get('return_day') || '{{ day }}';
+            console.log("Video return_day:", returnDay); // 调试：检查使用的 return_day
 
-            // 发送请求更新 video_watched，传递 return_day
-            const response = await fetch(`/update_video_watched/{{ user_id }}/{{ day }}?return_day=${returnDay}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const result = await response.json();
-            if (result.status === 'success') {
-                // 使用返回的 day 跳转到测验页面
-                window.location.href = `/quiz/{{ user_id }}/${result.day}`;
-            } else {
-                alert('Failed to update video status');
+            try {
+                const response = await fetch(`/video/{{ user_id }}/{{ day }}?return_day=${returnDay}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                console.log("Video response:", data); // 调试：检查后端返回的 JSON
+
+                if (data.status === "success" && data.next === "quiz") {
+                    window.location.href = `/quiz/{{ user_id }}/${data.day}`;
+                } else {
+                    alert('无法更新视频观看状态，请重试');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('发生错误，请检查网络连接');
             }
         }
     </script>

@@ -2,58 +2,58 @@
     "unit1": {
         "word": {
             "choice": [
-                {"id": "w1", "question": "1. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"id": "w15", "question": "2. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"id": "w16", "question": "3. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"id": "w17", "question": "4. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"id": "w18", "question": "5. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"}
+                {"question": "1. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "2. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "3. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "4. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "5. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"}
             ],
             "matching": [
-                {"id": "w2", "question": "Match: schoolbag", "options": ["书包", "铅笔"], "answer": "书包"}
+                {"question": "Match: schoolbag", "options": ["书包", "铅笔"], "answer": "书包"}
             ],
             "read_aloud": [
-                {"id": "w3", "question": "Read: pencil", "answer": "pencil"}
+                {"question": "Read: pencil", "answer": "pencil"}
             ],
             "spelling": [
-                {"id": "w4", "question": "Spell: 尺子", "answer": "ruler"}
+                {"question": "Spell: 尺子", "answer": "ruler"}
             ]
         },
         "sentence": {
             "read_aloud": [
-                {"id": "s1", "question": "Read: I have a book.", "answer": "I have a book."}
+                {"question": "Read: I have a book.", "answer": "I have a book."}
             ],
             "matching": [
-                {"id": "s2", "question": "Match: 坐下，谢谢。", "options": ["Sit down, please.", "Stand up, Joy."], "answer": "Sit down, please."}
+                {"question": "Match: 坐下，谢谢。", "options": ["Sit down, please.", "Stand up, Joy."], "answer": "Sit down, please."}
             ],
             "choice": [
-                {"id": "s3", "question": "我有一个书包。", "options": ["I have a schoolbag.", "I have a teacher."], "answer": "I have a schoolbag."}
+                {"question": "我有一个书包。", "options": ["I have a schoolbag.", "I have a teacher."], "answer": "I have a schoolbag."}
             ]
         }
     },
     "unit2": {
         "word": {
             "choice": [
-                {"id": "w5", "question": "耳朵的英文是？", "options": ["ear", "eye"], "answer": "ear"}
+                {"question": "耳朵的英文是？", "options": ["ear", "eye"], "answer": "ear"}
             ],
             "matching": [
-                {"id": "w6", "question": "Match: mouth", "options": ["嘴巴", "鼻子"], "answer": "嘴巴"}
+                {"question": "Match: mouth", "options": ["嘴巴", "鼻子"], "answer": "嘴巴"}
             ],
             "read_aloud": [
-                {"id": "w7", "question": "Read: nose", "answer": "nose"}
+                {"question": "Read: nose", "answer": "nose"}
             ],
             "spelling": [
-                {"id": "w8", "question": "Spell: 眼睛", "answer": "eye"}
+                {"question": "Spell: 眼睛", "answer": "eye"}
             ]
         },
         "sentence": {
             "read_aloud": [
-                {"id": "s4", "question": "Read: Touch your ear.", "answer": "Touch your ear."}
+                {"question": "Read: Touch your ear.", "answer": "Touch your ear."}
             ],
             "matching": [
-                {"id": "s5", "question": "Match: Open your mouth.", "options": ["张开你的嘴巴。", "闭上你的嘴巴。"], "answer": "张开你的嘴巴。"}
+                {"question": "Match: Open your mouth.", "options": ["张开你的嘴巴。", "闭上你的嘴巴。"], "answer": "张开你的嘴巴。"}
             ],
             "choice": [
-                {"id": "s6", "question": "这是我的脸。", "options": ["This is my face.", "Touch your face."], "answer": "This is my face."}
+                {"question": "这是我的脸。", "options": ["This is my face.", "Touch your face."], "answer": "This is my face."}
             ]
         }
     }

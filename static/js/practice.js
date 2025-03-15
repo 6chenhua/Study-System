@@ -12,7 +12,7 @@ document.getElementById("practiceForm").addEventListener("submit", function(e) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Next action:", data.next, ". pra.js")
+        console.log("Next action:", data.next, ". pra.js");
         if (data.next === "practice") {
             window.location.reload();
         } else if (data.next === "quiz") {
@@ -23,6 +23,8 @@ document.getElementById("practiceForm").addEventListener("submit", function(e) {
             window.location.href = `/rest/${data.user_id}/${data.day}`;
         } else if (data.next === "done") {
             window.location.href = `/done/${data.user_id}`;
+        } else if (data.next === "encourage") {
+            window.location.href = `/encourage/${data.user_id}/${data.day}`;
         } else {
             console.error("Unknown next value:", data.next);
             window.location.href = `/video/${data.user_id}/${data.day}`;
