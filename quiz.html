@@ -1,0 +1,62 @@
+            // 从页面获取题目数据 - 处理现有的匹配题结构
+            const questionId = gameContainer.dataset.questionId;
+            const questionText = gameContainer.closest('.question').querySelector('p > strong').textContent;
+            
+            // 提取问题信息
+            const questionMatch = questionText.match(/\d+\.\s+(.+)/);
+            const questionTitle = questionMatch ? questionMatch[1] : '';
+            
+            // 查找题目对应的原始数据
+            let matchingData = [];
+            
+            // 从问题标题中提取匹配项
+            // 示例：如果题目是"mouth"，我们需要找到对应的中文"嘴巴"
+            let questionWord = questionTitle.replace('Match: ', '').trim();
+            
+            // 从HTML数据属性中获取数据
+            const dataLeft = gameContainer.dataset.left || questionWord;
+            const dataRight = gameContainer.dataset.right;
+            
+            if (dataLeft && dataRight) {
+                // 如果有数据属性，使用它
+                matchingData = [{ left: dataLeft, right: dataRight }];
+                console.log(`使用数据属性匹配对: ${dataLeft} - ${dataRight}`);
+            } else {
+                // 没有数据属性，根据问题ID查找对应元素
+                console.log(`从问题ID ${questionId} 查找匹配数据`);
+                
+                // 从input元素的name属性中获取题目ID
+                const questionElement = document.querySelector(`input[name="${questionId}"]`);
+                if (questionElement && questionElement.dataset.matchData) {
+                    try {
+                        // 尝试解析JSON格式的匹配数据
+                        matchingData = JSON.parse(questionElement.dataset.matchData);
+                        console.log(`找到JSON匹配数据:`, matchingData);
+                    } catch (e) {
+                        console.error(`解析JSON匹配数据失败:`, e);
+                    }
+                } else {
+                    // 查找所有类似选项的元素，收集匹配题数据
+                    const allMatchingContainers = document.querySelectorAll('.matching-game');
+                    console.log(`找到 ${allMatchingContainers.length} 个匹配容器`);
+                    
+                    // 如果这是第一个匹配题容器，可以创建匹配数据
+                    if (!document.querySelector('.matching-game[data-processed="true"]')) {
+                        // 标记为已处理
+                        gameContainer.dataset.processed = "true";
+                        
+                        // 使用问题的数据
+                        matchingData = [
+                            { left: "mouth", right: "嘴巴" },
+                            { left: "nose", right: "鼻子" },
+                            { left: "eye", right: "眼睛" },
+                            { left: "ear", right: "耳朵" }
+                        ];
+                        console.log(`使用默认匹配数据`);
+                    } else {
+                        // 避免多次初始化相同的匹配题数据
+                        console.log(`跳过重复的匹配题容器`);
+                        return; // 跳过初始化
+                    }
+                }
+            } 

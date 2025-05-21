@@ -67,7 +67,8 @@ def video(user_id, day):
         video_paths = []
         for task in tasks:
             if task["attempt"] == 0:  # 仅初学任务有视频
-                video_path = f"/static/videos/{user_state['style']}/{task['unit']}_{task['type']}_day{day}.mp4"
+                # video_path = f"/static/videos/{user_state['style']}/{task['unit']}_{task['type']}_day{day}.mp4"
+                video_path = f"/static/videos/{user_state['style']}/{task['unit']}_{task['type']}s_{user_state['style']}.mp4"
                 video_paths.append(video_path)
         if not video_paths:
             print(f"No video available for day {day}, redirecting to quiz")
@@ -223,54 +224,100 @@ def quiz(user_id, day):
             return redirect(url_for("video", user_id=user_id, day=day))
 
         questions = {}
+        # 跟踪已添加的匹配题ID - 临时禁用过滤
+        # added_matching_questions = set()
+        
         for subtype in current_task["subtypes"]:
             key = f"{current_task['unit']}_{current_task['type']}_{subtype}"
             q_list = flow_controller.quiz_manager.get_questions(current_task["unit"], current_task["type"], subtype)
+            print(f"获取到 {len(q_list)} 个 {key} 类型题目")
+            
+            # 对于匹配题，处理数据格式
+            if subtype == "matching":
+                # filtered_q_list = []
+                
+                for q in q_list:
+                    # 记录原始数据格式，便于调试
+                    print(f"原始匹配题数据: {q}")
+                    
+                    # 先处理新数据结构，添加兼容字段
+                    if "left" in q and "right" in q:
+                        # 添加兼容字段，确保代码其他部分可以正常工作
+                        if "question" not in q:
+                            q["question"] = f"Match: {q['left']}"
+                        if "answer" not in q:
+                            q["answer"] = q["right"]
+                        if "options" not in q:
+                            q["options"] = [q["right"]]  # 简单起见，只放入正确选项
+                
+                # 临时禁用匹配题过滤逻辑
+                # q_list = filtered_q_list
+                print(f"匹配题列表: {q_list}")
+            
             for i, q in enumerate(q_list):
                 q["id"] = f"{current_task['unit']}_{current_task['type']}_{subtype}_{i}"
-            questions[key] = q_list
+                if subtype == "read_aloud": 
+                    audio_filename = f"audio/{q['id']}.mp3"
+                    if os.path.exists(os.path.join(app.static_folder, audio_filename)):
+                        q["model_audio_url"] = url_for('static', filename=audio_filename)
+                    else:
+                        q["model_audio_url"] = None
+                        app.logger.warning(f"Model audio file not found: static/{audio_filename} for question ID {q['id']}")
+                elif subtype == "matching":
+                    if ":" in q["question"]:
+                        parts = q["question"].split(":", 1)
+                        q["match_prompt"] = parts[0].strip()
+                    else:
+                        q["match_prompt"] = q["question"]
+                elif subtype == "spelling":
+                    if "answer" in q and isinstance(q["answer"], str):
+                        import random
+                        answer_letters = list(q["answer"])
+                        random.shuffle(answer_letters)
+                        q["shuffled_letters"] = answer_letters
+                questions[key] = q_list
         task_info = [{"unit": current_task["unit"], "type": current_task["type"], "attempt": current_task["attempt"]}]
         print(f"Generated questions for task {current_task}: {questions}")
         return render_template("quiz.html", user_id=user_id, day=day, questions=questions, tasks=task_info)
 
     elif request.method == "POST":
-        # 修改：支持 FormData，处理普通答案和音频文件
         answers = {}
-
-        # 处理普通答案（文本、选择题等）
-        for key in request.form:
-            answers[key] = request.form[key]
-            print(f"Received form answer for {key}: {answers[key]}")
-
-        # 处理音频文件（read_aloud）
-        for key in request.files:
-            audio_file = request.files[key]
-            print(f"Received audio file for {key}: {audio_file.filename}")
+        for key_form in request.form:
+            answers[key_form] = request.form[key_form]
+            print(f"Received form answer for {key_form}: {answers[key_form]}")
+            
+            # 处理匹配题的JSON数据
+            if "matching" in key_form and answers[key_form].startswith('[{'):
+                try:
+                    import json
+                    # 解析JSON数据
+                    match_data = json.loads(answers[key_form])
+                    print(f"解析匹配题数据: {match_data}")
+                    
+                    # 对于匹配题，我们需要将所有连接都提交给后端
+                    # 保持原始JSON格式，让流程控制器处理评分
+                    # 不修改answers[key_form]的值
+                except Exception as e:
+                    print(f"解析匹配题JSON数据出错: {e}")
+        
+        for key_file in request.files:
+            audio_file = request.files[key_file]
+            print(f"Received audio file for {key_file}: {audio_file.filename}")
             recognized_text = recognize_speech(audio_file)
-            answers[key] = recognized_text if recognized_text else ""
-            print(f"Recognized text for {key}: {answers[key]}")
+            answers[key_file] = recognized_text if recognized_text else ""
+            print(f"Recognized text for {key_file}: {answers[key_file]}")
 
         current_task = tasks[current_task_index]
         task_answers = {k: v for k, v in answers.items() if
                         k.startswith(f"{current_task['unit']}_{current_task['type']}_")}
         print(f"Filtered task answers: {task_answers}")
 
-        questions = {}
-        for subtype in current_task["subtypes"]:
-            key = f"{current_task['unit']}_{current_task['type']}_{subtype}"
-            q_list = flow_controller.quiz_manager.get_questions(current_task["unit"], current_task["type"], subtype)
-            for i, q in enumerate(q_list):
-                q["id"] = f"{current_task['unit']}_{current_task['type']}_{subtype}_{i}"
-                if q["id"] in task_answers:
-                    q["user_answer"] = task_answers[q["id"]]
-            questions[key] = q_list
-        print(f"Generated questions with user answers for task {current_task}: {questions}")
-
         result = flow_controller.handle_review(user_state, current_task, task_answers)
         print(f"Task {current_task_index + 1}/{len(tasks)} result: {result}")
 
         correct_rate = result["correct_rate"]
-        threshold = 0.6 if current_task["attempt"] <= 1 else 0.7 if current_task["attempt"] == 2 else 0.8
+        # threshold = 0.6 if current_task["attempt"] <= 1 else 0.7 if current_task["attempt"] == 2 else 0.8
+        threshold = 0.6
         print(f"Correct rate: {correct_rate}, Threshold: {threshold}")
 
         video_day = day
@@ -382,36 +429,94 @@ def practice(user_id, day):
         attempt = user_state["units"][current_task["unit"]][current_task["type"]]["attempts"][current_task["attempt"]]
         print(f"Attempt data for {current_task['unit']}_{current_task['type']}_attempt{current_task['attempt']}: {attempt}")
 
-        questions = {current_task["type"]: attempt["wrong_questions"]}
-        if not questions[current_task["type"]] or attempt["correct_rate"] == 1.0:
-            print(f"No wrong questions or all correct for task {current_task}, moving to next task")
+        # Prepare questions for the template, adding model_audio_url for read_aloud questions
+        processed_questions_for_template = {}
+        # wrong_questions is a list of question dicts according to user_state sample
+        q_list_orig = attempt.get("wrong_questions", []) 
+        q_type = current_task["type"] # Get the type from current_task
+
+        # 跟踪已添加的匹配题ID
+        added_matching_questions = set()
+        
+        q_list_processed = []
+        for q_orig in q_list_orig:
+            q_copy = q_orig.copy()
+            if "read_aloud" in q_copy.get("id", "").lower():
+                audio_filename = f"audio/{q_copy['id']}.mp3"
+                if os.path.exists(os.path.join(app.static_folder, audio_filename)):
+                    q_copy["model_audio_url"] = url_for('static', filename=audio_filename)
+                else:
+                    q_copy["model_audio_url"] = None
+                    app.logger.warning(f"Model audio file not found for practice: static/{audio_filename} for question ID {q_copy['id']}")
+            
+            # 添加subtype字段
+            if 'subtype' not in q_copy:
+                if "choice" in q_copy.get("id", "").lower():
+                    q_copy['subtype'] = 'choice'
+                elif "matching" in q_copy.get("id", "").lower():
+                    q_copy['subtype'] = 'matching'
+                elif "read_aloud" in q_copy.get("id", "").lower():
+                    q_copy['subtype'] = 'read_aloud'
+            
+            # 检查是否是匹配题，如果是则先处理兼容字段，再检查重复
+            if "matching" in q_copy.get("id", "").lower() or q_type == "matching":
+                # 先处理新数据结构，添加兼容字段
+                if "left" in q_copy and "right" in q_copy:
+                    # 添加兼容字段，确保代码其他部分可以正常工作
+                    if "question" not in q_copy:
+                        q_copy["question"] = f"Match: {q_copy['left']}"
+                    if "answer" not in q_copy:
+                        q_copy["answer"] = q_copy["right"]
+                    if "options" not in q_copy:
+                        q_copy["options"] = [q_copy["right"]]  # 简单起见，只放入正确选项
+                    
+                    # 使用新的数据格式时，创建唯一标识
+                    content_key = f"{q_copy['left']}-{q_copy['right']}"
+                else:
+                    # 处理原始数据格式
+                    content_key = f"{q_copy.get('question', '')}-{q_copy.get('answer', '')}"
+                
+                # 如果是重复的匹配题，跳过
+                if content_key in added_matching_questions:
+                    print(f"跳过重复的练习匹配题: {q_copy.get('id', content_key)}")
+                    continue
+                
+                # 记录已添加的匹配题
+                added_matching_questions.add(content_key)
+                
+            q_list_processed.append(q_copy)
+            
+        processed_questions_for_template[q_type] = q_list_processed
+        
+        active_question_list = processed_questions_for_template.get(q_type, [])
+        if not active_question_list or attempt.get("correct_rate") == 1.0:
+            print(f"No wrong questions to practice or all correct for task {current_task}, moving to next task in quiz")
             user_state["current_task_index"] += 1
             user_manager.save_user(user_state)
             return redirect(url_for("quiz", user_id=user_id, day=day))
 
-        # 修改：将 subtypes 包含在 task_info 中
         task_info = [{
             "unit": current_task["unit"],
             "type": current_task["type"],
             "attempt": current_task["attempt"],
-            "subtypes": current_task.get("subtypes", [])  # 确保 subtypes 被传递
+            "subtypes": current_task.get("subtypes", [])
         }]
-        print(f"Rendering practice with questions: {questions}, task_info: {task_info}")
-        return render_template("practice.html", user_id=user_id, day=day, questions=questions, tasks=task_info)
+        print(f"Rendering practice with questions: {processed_questions_for_template}, task_info: {task_info}")
+        return render_template("practice.html", user_id=user_id, day=day, questions=processed_questions_for_template, tasks=task_info)
 
     # POST 处理保持不变
     elif request.method == "POST":
         answers = {}
-        for key in request.form:
-            answers[key] = request.form[key]
-            print(f"Received form answer for {key}: {answers[key]}")
+        for key_form in request.form:
+            answers[key_form] = request.form[key_form]
+            print(f"Received form answer for {key_form}: {answers[key_form]}")
         if "read_aloud" in tasks[current_task_index]["subtypes"]:
-            for key in request.files:
-                audio_file = request.files[key]
-                print(f"Received audio file for {key}: {audio_file.filename}")
+            for key_file in request.files:
+                audio_file = request.files[key_file]
+                print(f"Received audio file for {key_file}: {audio_file.filename}")
                 recognized_text = recognize_speech(audio_file)
-                answers[key] = recognized_text if recognized_text else ""
-                print(f"Recognized text for {key}: {answers[key]}")
+                answers[key_file] = recognized_text if recognized_text else ""
+                print(f"Recognized text for {key_file}: {answers[key_file]}")
 
         current_task = tasks[current_task_index]
         task_answers = {k: v for k, v in answers.items() if k.startswith(f"{current_task['unit']}_{current_task['type']}_")}

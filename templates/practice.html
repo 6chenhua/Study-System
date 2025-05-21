@@ -1,162 +1,659 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Practice - Day {{ day }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>练习 - 第{{ day }}天</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Google Fonts (Nunito) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        .question {
-            margin: 20px 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #1e90ff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #4169e1;
-        }
-        .recording-btn.recording {
-            background-color: #ff4500;
-        }
-    </style>
 </head>
 <body>
-    <h1>Day {{ day }} - Practice</h1>
-    <form id="practiceForm" data-user-id="{{ user_id }}" data-day="{{ day }}">
-        {% for subtype, q_list in questions.items() %}
-            <h2>{{ subtype | capitalize }}</h2>
-            {% for question in q_list %}
-                <div class="question">
-                    <p>{{ question.question }}</p>
-                    {% if "options" in question %}
-                        {% if subtype == "matching" %}
-                            <select name="{{ question.id }}">
-                                {% for option in question.options %}
-                                    <option value="{{ option }}">{{ option }}</option>
-                                {% endfor %}
-                            </select>
-                        {% else %}
-                            {% for option in question.options %}
-                                <input type="radio" name="{{ question.id }}" value="{{ option }}"> {{ option }}<br>
-                            {% endfor %}
-                        {% endif %}
-                    {% elif "read_aloud" in tasks[0].subtypes %}
-                        <button type="button" class="recording-btn" data-question-id="{{ question.id }}">开始录音</button>
-                        <span class="recording-status"></span>
-                    {% else %}
-                        <input type="text" name="{{ question.id }}" placeholder="Type your answer">
-                    {% endif %}
+    <div class="container mt-4 mb-5">
+        <h1 class="mb-4">第{{ day }}天 - 练习</h1>
+        
+        <form id="practiceForm" data-user-id="{{ user_id }}" data-day="{{ day }}">
+            {% for key, q_list in questions.items() %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h2>{{ key.replace('_', ' ') | capitalize }} 练习</h2>
+                    </div>
+                    <div class="card-body">
+                        {% for question in q_list %}
+                            <div class="question mb-4 p-3">
+                                <p><strong>{{ loop.index }}. {% if question.subtype == "matching" and question.match_prompt %}{{ question.match_prompt }}{% elif question.subtype == "matching" and ":" in question.question %}{{ question.question.split(":")[1] | trim }}{% else %}{{ question.question }}{% endif %}</strong></p>
+                                
+                                <!-- 显示正确答案 -->
+                                <div class="alert alert-info mb-2">
+                                    正确答案: {% if question.subtype == "matching" %}连接 "{{ question.left }}" 和 "{{ question.right }}"{% else %}{{ question.answer }}{% endif %}
+                                </div>
+                                
+                                <!-- 显示用户的上一次答案(如果有) -->
+                                {% if question.user_answer %}
+                                <div class="alert alert-danger mb-3">
+                                    您的答案: {{ question.user_answer }}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- 根据题型显示不同的输入控件 -->
+                                {% if question.subtype == "choice" and question.options %}
+                                    <div class="radio-group">
+                                        {% for option in question.options %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ option }}">
+                                                <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}">{{ option }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% elif question.subtype == "matching" %}
+                                    <div class="matching-game" data-question-id="{{ question.id }}"
+                                         {% if "left" in question %}data-left="{{ question.left }}"{% endif %}
+                                         {% if "right" in question %}data-right="{{ question.right }}"{% endif %}>
+                                        <div class="matching-header mb-3">
+                                            <button type="button" class="btn btn-sm reset-btn">
+                                                <i class="fas fa-sync-alt"></i> 重置
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="matching-container position-relative mb-3">
+                                            <div class="matching-items-container row">
+                                                <div class="left-items col-md-5">
+                                                    <!-- Left items will be populated by JS -->
+                                                </div>
+                                                <div class="center-space col-md-2 d-flex align-items-center justify-content-center">
+                                                    <!-- This creates space for the lines -->
+                                                </div>
+                                                <div class="right-items col-md-5">
+                                                    <!-- Right items will be populated by JS -->
+                                                </div>
+                                            </div>
+                                            <!-- SVG for connection lines will be inserted here -->
+                                            <svg class="connection-lines position-absolute top-0 start-0 w-100 h-100" style="z-index: 10; pointer-events: none;"></svg>
+                                        </div>
+                                        
+                                        <div class="completion-message alert alert-success" style="display: none;">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <span>恭喜！您已完成所有匹配！</span>
+                                        </div>
+                                        
+                                        <div class="progress-container">
+                                            <div class="progress">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <span class="progress-text">0/4</span>
+                                        </div>
+                                        
+                                        <!-- Hidden input to store the connections -->
+                                        <input type="hidden" name="{{ question.id }}" class="matching-answer"
+                                               {% if "left" in question and "right" in question %}
+                                               data-match-data='[{"left":"{{ question.left }}","right":"{{ question.right }}"}]'
+                                               {% endif %}>
+                                    </div>
+                                {% elif question.subtype == "read_aloud" %}
+                                    <div class="mt-3 text-center">
+                                        {% if question.model_audio_url %}
+                                            <div class="mb-3">
+                                                <audio controls src="{{ question.model_audio_url }}" class="w-100">
+                                                    您的浏览器不支持音频播放。
+                                                </audio>
+                                            </div>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-info recording-btn" data-question-id="{{ question.id }}">开始录音</button>
+                                        <span class="recording-status ms-2"></span>
+                                    </div>
+                                {% else %}
+                                    <div class="mt-3">
+                                        <input type="text" name="{{ question.id }}" class="form-control form-control-lg" placeholder="请输入您的答案">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             {% endfor %}
-        {% endfor %}
-        <button type="submit">Submit</button>
-    </form>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success btn-lg">提交答案</button>
+            </div>
+        </form>
+    </div>
 
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS (recorder) -->
     <script type="module">
-            import recorder from '/static/js/recorder.js';
+        import recorder from '{{ url_for("static", filename="js/recorder.js") }}';
 
-            const form = document.getElementById('practiceForm');
-            const audioData = new Map();
+        const form = document.getElementById('practiceForm');
+        const audioData = new Map();
 
-            const recordingButtons = document.querySelectorAll('.recording-btn');
-            console.log("Found recording buttons:", recordingButtons.length);
-            recordingButtons.forEach(btn => {
-                const questionId = btn.dataset.questionId;
-                const status = btn.nextElementSibling;
-                let isRecording = false; // Local state instead of recorder.getRecordingState
+        // Audio recording logic
+        document.querySelectorAll('.recording-btn').forEach(btn => {
+            const questionId = btn.dataset.questionId;
+            const status = btn.closest('.question').querySelector('.recording-status');
+            let isRecording = false;
 
-                console.log("Binding event to button with questionId:", questionId);
+            btn.addEventListener('click', async () => {
+                if (!isRecording) {
+                    try {
+                        const success = await recorder.startRecording();
+                        if (success) {
+                            btn.textContent = "停止录音";
+                            btn.classList.remove('btn-info');
+                            btn.classList.add('btn-danger', 'recording');
+                            status.textContent = "正在录音...";
+                            isRecording = true;
+                            recorder.setOnRecordingComplete((audioBlob) => {
+                                audioData.set(questionId, audioBlob);
+                                status.textContent = "录音完成!";
+                                isRecording = false;
+                                btn.textContent = "重新录音";
+                                btn.classList.remove('btn-danger', 'recording');
+                                btn.classList.add('btn-info');
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Recording failed:", err);
+                        status.textContent = "录音失败 :(";
+                        btn.classList.remove('recording', 'btn-danger');
+                        btn.classList.add('btn-info');
+                        btn.textContent = "开始录音";
+                    }
+                } else {
+                    recorder.stopRecording();
+                }
+            });
+        });
 
-                btn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    console.log("Button clicked for questionId:", questionId);
-                    if (!isRecording) {
+        // 全局变量跟踪是否已经初始化过匹配题
+        let hasInitializedMatching = false;
+
+        // Matching game logic
+        document.querySelectorAll('.matching-game').forEach((gameContainer, index) => {
+            const hiddenInput = gameContainer.querySelector('.matching-answer');
+            const leftItemsContainer = gameContainer.querySelector('.left-items');
+            const rightItemsContainer = gameContainer.querySelector('.right-items');
+            const svgElement = gameContainer.querySelector('.connection-lines');
+            const progressBar = gameContainer.querySelector('.progress-bar');
+            const progressText = gameContainer.querySelector('.progress-text');
+            const completionMessage = gameContainer.querySelector('.completion-message');
+            const resetButton = gameContainer.querySelector('.reset-btn');
+            
+            // 从页面获取题目数据 - 处理现有的匹配题结构
+            const questionId = gameContainer.dataset.questionId;
+            const questionText = gameContainer.closest('.question').querySelector('p > strong').textContent;
+            
+            // 提取问题信息
+            const questionMatch = questionText.match(/\d+\.\s+(.+)/);
+            const questionTitle = questionMatch ? questionMatch[1] : '';
+            
+            // 如果不是第一个匹配题容器，隐藏它
+            if (hasInitializedMatching) {
+                gameContainer.closest('.question').style.display = 'none';
+                return; // 不初始化后续的匹配题容器
+            }
+            
+            // 标记已经初始化过匹配题
+            hasInitializedMatching = true;
+            
+            // 获取匹配题数据
+            let matchingData = [];
+            
+            // 从数据属性中获取匹配数据
+            const dataLeft = gameContainer.dataset.left;
+            const dataRight = gameContainer.dataset.right;
+            
+            if (dataLeft && dataRight) {
+                // 使用数据属性创建一个匹配对
+                matchingData.push({ left: dataLeft, right: dataRight });
+                console.log(`使用数据属性匹配对: ${dataLeft} - ${dataRight}`);
+            }
+            
+            // 从隐藏输入框中获取匹配数据
+            if (hiddenInput && hiddenInput.dataset.matchData) {
+                try {
+                    const parsedData = JSON.parse(hiddenInput.dataset.matchData);
+                    if (Array.isArray(parsedData) && parsedData.length > 0) {
+                        // 如果已经有数据，我们添加新的匹配项
+                        parsedData.forEach(item => {
+                            if (!matchingData.some(m => m.left === item.left && m.right === item.right)) {
+                                matchingData.push(item);
+                            }
+                        });
+                        console.log('从data-match-data解析匹配数据:', parsedData);
+                    }
+                } catch (e) {
+                    console.error('解析匹配数据出错:', e);
+                }
+            }
+            
+            // 如果没有找到足够的匹配对，使用默认数据
+            if (matchingData.length === 0) {
+                // 默认示例数据
+                matchingData = [
+                    { left: "mouth", right: "嘴巴" },
+                    { left: "nose", right: "鼻子" },
+                    { left: "eye", right: "眼睛" },
+                    { left: "ear", right: "耳朵" }
+                ];
+                console.log('使用默认匹配数据');
+            } else {
+                // 使用真实数据并在控制台显示
+                console.log('使用真实匹配数据:', matchingData);
+                console.log('gameContainer数据属性:', {
+                    id: questionId,
+                    left: dataLeft,
+                    right: dataRight,
+                    matchData: hiddenInput?.dataset?.matchData
+                });
+                
+                // 查找同类型的匹配题，收集更多匹配对
+                const allMatchingContainers = document.querySelectorAll('.matching-game');
+                console.log(`找到 ${allMatchingContainers.length} 个匹配容器`);
+                
+                // 收集所有匹配题的数据
+                allMatchingContainers.forEach((container, idx) => {
+                    if (container === gameContainer) return; // 跳过当前容器
+                    
+                    const left = container.dataset.left;
+                    const right = container.dataset.right;
+                    
+                    if (left && right) {
+                        // 避免重复添加相同的匹配对
+                        if (!matchingData.some(pair => pair.left === left && pair.right === right)) {
+                            matchingData.push({ left, right });
+                            console.log(`从容器 ${idx} 添加匹配对: ${left} - ${right}`);
+                        }
+                    }
+                    
+                    // 从隐藏输入框获取数据
+                    const hiddenInput = container.querySelector('.matching-answer');
+                    if (hiddenInput && hiddenInput.dataset.matchData) {
                         try {
-                            const success = await recorder.startRecording();
-                            console.log("Start recording result:", success);
-                            if (success) {
-                                btn.textContent = "停止录音";
-                                btn.classList.add('recording');
-                                status.textContent = "正在录音...";
-                                isRecording = true;
-                                recorder.setOnRecordingComplete((audioBlob) => {
-                                    audioData.set(questionId, audioBlob);
-                                    status.textContent = "录音完成";
-                                    console.log("Recording completed for:", questionId);
-                                    isRecording = false;
+                            const parsedData = JSON.parse(hiddenInput.dataset.matchData);
+                            if (Array.isArray(parsedData)) {
+                                parsedData.forEach(item => {
+                                    if (!matchingData.some(pair => pair.left === item.left && pair.right === item.right)) {
+                                        matchingData.push(item);
+                                        console.log(`从容器 ${idx} 的dataset添加匹配对: ${item.left} - ${item.right}`);
+                                    }
                                 });
                             }
-                        } catch (err) {
-                            console.error("Recording failed:", err);
-                            status.textContent = "录音失败";
+                        } catch (e) {
+                            console.error(`解析容器 ${idx} 的JSON数据出错:`, e);
                         }
-                    } else {
-                        recorder.stopRecording();
-                        btn.textContent = "开始录音";
-                        btn.classList.remove('recording');
-                        console.log("Recording stopped for:", questionId);
-                        isRecording = false;
                     }
                 });
-            });
+            }
+            
+            // Game state
+            let leftItems = [];
+            let rightItems = [];
+            let selectedItem = null;  // { side: 'left'|'right', id: string }
+            let connections = [];
+            const itemsCount = matchingData.length;
+            
+            // Initialize the game
+            initializeGame();
+            
+            // Set up reset button
+            resetButton.addEventListener('click', resetGame);
+            
+            function initializeGame() {
+                resetGame();
+            }
+            
+            function resetGame() {
+                // Clear containers
+                leftItemsContainer.innerHTML = '';
+                rightItemsContainer.innerHTML = '';
+                svgElement.innerHTML = '';
+                
+                // Reset state
+                connections = [];
+                selectedItem = null;
+                
+                // Generate items
+                const { leftItems: newLeftItems, rightItems: newRightItems } = generateItems();
+                leftItems = newLeftItems;
+                rightItems = newRightItems;
+                
+                // Render items
+                renderItems();
+                
+                // Update progress
+                updateProgress();
+                
+                // Hide completion message
+                completionMessage.style.display = 'none';
+                
+                // Update hidden input
+                hiddenInput.value = '';
+            }
+            
+            function renderItems() {
+                // Render left items
+                leftItems.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'matching-item';
+                    itemElement.dataset.id = item.id;
+                    itemElement.dataset.matchId = item.matchId;
+                    itemElement.textContent = item.text;
+                    itemElement.style.position = 'relative';
+                    itemElement.style.zIndex = '20'; 
+                    itemElement.style.cursor = 'pointer';
+                    
+                    itemElement.addEventListener('click', () => selectItem('left', item.id));
+                    
+                    leftItemsContainer.appendChild(itemElement);
+                });
+                
+                // Render right items
+                rightItems.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'matching-item';
+                    itemElement.dataset.id = item.id;
+                    itemElement.dataset.matchId = item.matchId;
+                    itemElement.textContent = item.text;
+                    itemElement.style.position = 'relative';
+                    itemElement.style.zIndex = '20';
+                    itemElement.style.cursor = 'pointer';
+                    
+                    itemElement.addEventListener('click', () => selectItem('right', item.id));
+                    
+                    rightItemsContainer.appendChild(itemElement);
+                });
+            }
+            
+            function selectItem(side, id) {
+                console.log(`选择了 ${side} 侧的项目，ID: ${id}`);
+                
+                // Check if the item is already connected
+                if (connections.some(conn => 
+                    (side === 'left' && conn.leftId === id) || 
+                    (side === 'right' && conn.rightId === id))) {
+                    console.log('该项目已连接，忽略点击');
+                    return;
+                }
+                
+                // Get all items from the selected side
+                const itemsContainer = side === 'left' ? leftItemsContainer : rightItemsContainer;
+                const items = Array.from(itemsContainer.querySelectorAll('.matching-item'));
+                
+                // If no item was previously selected
+                if (!selectedItem) {
+                    // Update selection UI
+                    items.forEach(item => {
+                        if (item.dataset.id === id) {
+                            item.classList.add('selected');
+                        }
+                    });
+                    
+                    // Update selected item state
+                    selectedItem = { side, id };
+                    return;
+                }
+                
+                // If selecting on the same side, update selection
+                if (selectedItem.side === side) {
+                    // Remove selection from all items
+                    items.forEach(item => item.classList.remove('selected'));
+                    
+                    // Select the new item
+                    items.forEach(item => {
+                        if (item.dataset.id === id) {
+                            item.classList.add('selected');
+                        }
+                    });
+                    
+                    // Update selected item state
+                    selectedItem = { side, id };
+                    return;
+                }
+                
+                // Attempting to make a connection (different sides)
+                const leftId = side === 'left' ? id : selectedItem.id;
+                const rightId = side === 'right' ? id : selectedItem.id;
+                
+                // Find the matching items
+                const leftItem = leftItems.find(item => item.id === leftId);
+                const rightItem = rightItems.find(item => item.id === rightId);
+                
+                if (leftItem && rightItem) {
+                    // Add new connection
+                    connections.push({ 
+                        leftId, 
+                        rightId, 
+                        leftText: leftItem.text,
+                        rightText: rightItem.text
+                    });
+                    
+                    // Update UI to show connected items
+                    const leftElement = leftItemsContainer.querySelector(`[data-id="${leftId}"]`);
+                    const rightElement = rightItemsContainer.querySelector(`[data-id="${rightId}"]`);
+                    
+                    leftElement.classList.remove('selected');
+                    rightElement.classList.remove('selected');
+                    leftElement.classList.add('connected');
+                    rightElement.classList.add('connected');
+                    
+                    // Draw connection line
+                    drawConnection(leftElement, rightElement);
+                    
+                    // Update progress
+                    updateProgress();
+                    
+                    // Check if game is complete
+                    const allLeftConnected = leftItems.every(item => 
+                        connections.some(conn => conn.leftId === item.id)
+                    );
+                    
+                    if (allLeftConnected) {
+                        completionMessage.style.display = 'block';
+                    }
+                    
+                    // Update hidden input for form submission
+                    updateHiddenInput();
+                }
+                
+                // Reset selection
+                const allItems = Array.from(gameContainer.querySelectorAll('.matching-item:not(.connected)'));
+                allItems.forEach(item => item.classList.remove('selected'));
+                selectedItem = null;
+            }
+            
+            function drawConnection(leftElement, rightElement) {
+                // Get element positions
+                const leftRect = leftElement.getBoundingClientRect();
+                const rightRect = rightElement.getBoundingClientRect();
+                const svgRect = svgElement.getBoundingClientRect();
+                
+                // Ensure SVG has correct dimensions
+                svgElement.style.height = `${svgRect.height}px`;
+                svgElement.style.width = `${svgRect.width}px`;
+                
+                // Calculate positions relative to SVG
+                const x1 = leftRect.right - svgRect.left;
+                const y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+                const x2 = rightRect.left - svgRect.left;
+                const y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+                
+                // 当y1和y2非常接近时(同一行)，稍微调整y值以使连线可见
+                const isNearlyHorizontal = Math.abs(y1 - y2) < 5;
+                
+                // Create gradient for the path
+                const gradientId = `gradient-${Math.random().toString(36).substring(2, 9)}`;
+                
+                // Create defs element for gradient if it doesn't exist
+                let defs = svgElement.querySelector('defs');
+                if (!defs) {
+                    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                    svgElement.appendChild(defs);
+                }
+                
+                // Create linear gradient
+                const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+                gradient.setAttribute('id', gradientId);
+                gradient.setAttribute('x1', '0%');
+                gradient.setAttribute('y1', '0%');
+                gradient.setAttribute('x2', '100%');
+                gradient.setAttribute('y2', '0%');
+                
+                // Create gradient stops
+                const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop1.setAttribute('offset', '0%');
+                stop1.setAttribute('stop-color', '#8B5CF6');
+                
+                const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop2.setAttribute('offset', '100%');
+                stop2.setAttribute('stop-color', '#6366F1');
+                
+                // Add stops to gradient
+                gradient.appendChild(stop1);
+                gradient.appendChild(stop2);
+                
+                // Add gradient to defs
+                defs.appendChild(gradient);
+                
+                // Create the path
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                // 设置路径 - 根据是否接近水平线调整曲线
+                const controlX = x1 + (x2 - x1) * 0.5;
+                let pathData;
+                
+                if (isNearlyHorizontal) {
+                    // 如果几乎是水平线，增加弯曲度使连线更明显
+                    const controlY1 = y1 - 25; // 向上弯曲
+                    const controlY2 = y2 - 25; // 向上弯曲
+                    pathData = `M ${x1} ${y1} C ${controlX} ${controlY1}, ${controlX} ${controlY2}, ${x2} ${y2}`;
+                } else {
+                    // 正常的贝塞尔曲线
+                    pathData = `M ${x1} ${y1} C ${controlX} ${y1}, ${controlX} ${y2}, ${x2} ${y2}`;
+                }
+                
+                path.setAttribute('d', pathData);
+                
+                // Style the path
+                path.setAttribute('stroke', `url(#${gradientId})`);
+                path.setAttribute('stroke-width', '3');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linecap', 'round');
+                
+                // Add path to SVG
+                svgElement.appendChild(path);
+            }
+            
+            function updateProgress() {
+                const percentage = (connections.length / itemsCount) * 100;
+                
+                progressBar.style.width = `${percentage}%`;
+                progressText.textContent = `${connections.length}/${itemsCount}`;
+            }
+            
+            function updateHiddenInput() {
+                // Build answer data with all connections
+                const matchData = connections.map(conn => {
+                    const leftItem = leftItems.find(item => item.id === conn.leftId);
+                    const rightItem = rightItems.find(item => item.id === conn.rightId);
+                    return {
+                        left: leftItem ? leftItem.text : '',
+                        right: rightItem ? rightItem.text : ''
+                    };
+                });
+                
+                // Convert to JSON string and save to hidden input
+                hiddenInput.value = JSON.stringify(matchData);
+            }
+            
+            function generateItems() {
+                // Create left items (English vocabulary)
+                const leftItems = matchingData.map((pair, index) => {
+                    const id = `left-${Math.random().toString(36).substring(2, 9)}`;
+                    const matchId = `right-${index}`;
+                    return {
+                        id,
+                        text: pair.left,
+                        matchId
+                    };
+                });
+                
+                // Create right items (Chinese translations, randomized)
+                const rightItems = matchingData.map((pair, index) => {
+                    return {
+                        id: `right-${index}`,
+                        text: pair.right,
+                        matchId: leftItems[index].id
+                    };
+                }).sort(() => Math.random() - 0.5);  // Randomize right items
+                
+                return { leftItems, rightItems };
+            }
+        });
 
-        form.addEventListener('submit', async (event) => {
+        // Form submission
+        form.addEventListener('submit', async function(event) {
             event.preventDefault();
+            
+            // 获取提交按钮并禁用
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>提交中...';
+            
             const userId = form.dataset.userId;
             const day = form.dataset.day;
             const formData = new FormData();
-
-            const inputs = form.querySelectorAll('input, select');
+            
+            // Add form inputs to formData
+            const inputs = form.querySelectorAll('input[type="text"], input[type="radio"]:checked, select, input[type="hidden"]');
             inputs.forEach(input => {
-                if (input.type === 'radio' && input.checked) {
-                    formData.append(input.name, input.value);
-                } else if (input.type === 'text' && input.value.trim()) {
-                    formData.append(input.name, input.value.trim());
-                } else if (input.tagName === 'SELECT') {
-                    formData.append(input.name, input.value);
-                }
+                formData.append(input.name, input.value.trim());
             });
-
+            
+            // Add audio recordings
             audioData.forEach((blob, questionId) => {
                 formData.append(questionId, blob, `${questionId}.webm`);
             });
-
+            
             try {
                 const response = await fetch(`/practice/${userId}/${day}`, {
                     method: 'POST',
                     body: formData
                 });
+                
                 const data = await response.json();
-                console.log("Practice response:", data);
-
-                if (data.next === "video") {
-                    window.location.href = `/video/${userId}/${data.day}?return_day=${data.return_day}`;
-                } else if (data.next === "practice") {
-                    window.location.href = `/practice/${userId}/${data.day}`;
-                } else if (data.next === "quiz") {
-                    window.location.href = `/quiz/${userId}/${data.day}`;
-                } else if (data.next === "encourage") {
-                    window.location.href = `/encourage/${userId}/${data.day}`;
-                } else if (data.next === "done") {
-                    window.location.href = `/done/${userId}`;
+                
+                if (response.ok) {
+                    if (data.next === "practice") {
+                        window.location.href = `/practice/${userId}/${day}`;
+                    } else if (data.next === "quiz") {
+                        window.location.href = `/quiz/${userId}/${day}`;
+                    } else if (data.next === "encourage") {
+                        window.location.href = `/encourage/${userId}/${day}`;
+                    } else if (data.next === "done") {
+                        window.location.href = `/done/${userId}`;
+                    } else {
+                        alert("未知的下一步，请联系管理员。");
+                    }
                 } else {
-                    console.error("Unknown next:", data.next);
-                    alert("未知的跳转目标，请联系管理员");
+                    alert(data.message || "提交失败，请稍后再试。");
+                    
+                    // 发生错误时重新启用按钮
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '提交答案';
                 }
             } catch (error) {
                 console.error("Error submitting practice:", error);
-                alert("提交练习失败，请检查网络连接");
+                alert("提交练习时发生网络错误，请检查您的连接。");
+                
+                // 发生错误时重新启用按钮
+                submitButton.disabled = false;
+                submitButton.innerHTML = '提交答案';
             }
         });
     </script>

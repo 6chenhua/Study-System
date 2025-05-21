@@ -1,55 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rest Day</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #4CAF50;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+    <title>休息日</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Nunito) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Today is a Rest Day!</h1>
-        <p>Take a break and relax. See you tomorrow!</p>
+    <div class="container centered-container">
+        <div class="card shadow-lg text-center">
+            <div class="card-body p-5">
+                <div class="emoji mb-3">😌</div>
+                <h1 class="mb-3" style="color: var(--success-color);">今天是休息日！</h1>
+                <p class="fs-5 mb-4">好好休息，放松一下。明天继续加油哦！</p>
         {% if user_id and day %}
-            <p>User: {{ user_id }} | Day: {{ day }}</p>
+                    <p class="text-muted">用户: {{ user_id }} | 第 {{ day }} 天</p>
         {% endif %}
-        <button onclick="window.location.href='/'">Back to Home</button>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-2">返回首页</a>
         {% if user_id and day %}
-            <button onclick="window.location.href='/next_day/{{ user_id }}/{{ day }}'">Next Day</button>
+                        <a href="{{ url_for('next_day', user_id=user_id, day=day) }}" class="btn btn-success btn-lg">前往下一天</a>
         {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

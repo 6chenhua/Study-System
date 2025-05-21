@@ -2,20 +2,26 @@
     "unit1": {
         "word": {
             "choice": [
-                {"question": "1. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"question": "2. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"question": "3. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"question": "4. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
-                {"question": "5. 书本的英文是？", "options": ["book", "ruler"], "answer": "book"}
+                {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
+                {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"}
             ],
             "matching": [
-                {"question": "Match: schoolbag", "options": ["书包", "铅笔"], "answer": "书包"}
+                { "left": "mouth", "right": "嘴巴" },
+                { "left": "nose", "right": "鼻子" },
+                { "left": "eye", "right": "眼睛" },
+                { "left": "ear", "right": "耳朵" },
+                { "left": "ruler", "right": "尺子" }
             ],
             "read_aloud": [
-                {"question": "Read: 'I have a pencil.'", "answer": "I have a pencil."}
+                {"question": "读：'I have a pencil.'", "answer": "I have a pencil."},
+                {"question": "读：'I have a schoolbag.'", "answer": "I have a schoolbag."}
             ],
             "spelling": [
-                {"question": "Spell: 尺子", "answer": "ruler"}
+                {"question": "拼写: 尺子", "answer": "ruler"}
             ]
         },
         "sentence": {
@@ -23,7 +29,11 @@
                 {"question": "Read: I have a book.", "answer": "I have a book."}
             ],
             "matching": [
-                {"question": "Match: 坐下，谢谢。", "options": ["Sit down, please.", "Stand up, Joy."], "answer": "Sit down, please."}
+                { "left": "Sit down, please.", "right": "坐下，谢谢。" },
+                { "left": "Stand up, Joy.", "right": "站起来，乔伊。" },
+                { "left": "eye", "right": "眼睛" },
+                { "left": "ear", "right": "耳朵" },
+                { "left": "ruler", "right": "尺子" }
             ],
             "choice": [
                 {"question": "我有一个书包。", "options": ["I have a schoolbag.", "I have a teacher."], "answer": "I have a schoolbag."}
@@ -36,7 +46,12 @@
                 {"question": "耳朵的英文是？", "options": ["ear", "eye"], "answer": "ear"}
             ],
             "matching": [
-                {"question": "Match: mouth", "options": ["嘴巴", "鼻子"], "answer": "嘴巴"}
+                { "left": "mouth", "right": "嘴巴" },
+                { "left": "nose", "right": "鼻子" },
+                { "left": "eye", "right": "眼睛" },
+                { "left": "ear", "right": "耳朵" },
+                { "left": "ruler", "right": "尺子" },
+                { "left": "face", "right": "脸" }
             ],
             "read_aloud": [
                 {"question": "Read: nose", "answer": "Nose"}
@@ -50,7 +65,8 @@
                 {"question": "Read: Touch your ear.", "answer": "Touch your ear."}
             ],
             "matching": [
-                {"question": "Match: Open your mouth.", "options": ["张开你的嘴巴。", "闭上你的嘴巴。"], "answer": "张开你的嘴巴。"}
+                {"left": "Open your mouth.", "right": "张开你的嘴巴。" },
+                { "left": "Close your mouth.", "right": "闭上你的嘴巴。" }
             ],
             "choice": [
                 {"question": "这是我的脸。", "options": ["This is my face.", "Touch your face."], "answer": "This is my face."}

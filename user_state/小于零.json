@@ -1,0 +1,172 @@
+{
+    "user_id": "小于零",
+    "style": "holistic_verbal",
+    "current_day": 16,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 2,
+                        "correct_rate": 0.75,
+                        "wrong_questions": [
+                            {
+                                "question": "读：'I have a pencil.'",
+                                "answer": "I have a pencil.",
+                                "id": "unit1_word_read_aloud_0",
+                                "user_answer": null
+                            },
+                            {
+                                "question": "读：'I have a schoolbag.'",
+                                "answer": "I have a pencil.",
+                                "id": "unit1_word_read_aloud_1",
+                                "user_answer": null
+                            }
+                        ]
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 8,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 15,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 4,
+                        "correct_rate": 0.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 10,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 9,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 10,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 12,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 16,
+                        "correct_rate": 0.5555555555555556,
+                        "wrong_questions": [
+                            {
+                                "left": "ear",
+                                "right": "耳朵",
+                                "question": "Match: ear",
+                                "answer": "耳朵",
+                                "options": [
+                                    "耳朵"
+                                ],
+                                "id": "unit2_word_matching_3",
+                                "match_prompt": "Match",
+                                "user_answer": ""
+                            },
+                            {
+                                "left": "ruler",
+                                "right": "尺子",
+                                "question": "Match: ruler",
+                                "answer": "尺子",
+                                "options": [
+                                    "尺子"
+                                ],
+                                "id": "unit2_word_matching_4",
+                                "match_prompt": "Match",
+                                "user_answer": ""
+                            },
+                            {
+                                "left": "face",
+                                "right": "脸",
+                                "question": "Match: face",
+                                "answer": "脸",
+                                "options": [
+                                    "脸"
+                                ],
+                                "id": "unit2_word_matching_5",
+                                "match_prompt": "Match",
+                                "user_answer": ""
+                            },
+                            {
+                                "question": "Read: nose",
+                                "answer": "Nose",
+                                "id": "unit2_word_read_aloud_0",
+                                "model_audio_url": null,
+                                "user_answer": "Nor is it."
+                            }
+                        ]
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": [
+                    {
+                        "day": 11,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 12,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 14,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        }
+    },
+    "video_watched": {
+        "1": true,
+        "3": true,
+        "9": true,
+        "11": true
+    },
+    "current_task_index": 0
+}

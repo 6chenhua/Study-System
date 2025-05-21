@@ -2,49 +2,46 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>观看视频 - Day {{ day }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        video {
-            width: 80%;
-            max-width: 800px;
-            margin: 20px auto;
-            display: block;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #1e90ff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #4169e1;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观看视频 - 第{{ day }}天</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Nunito) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>请观看以下视频 - Day {{ day }}</h1>
+    <div class="container mt-4 mb-5">
+        <h1 class="mb-4">第{{ day }}天 - 学习视频</h1>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {% if video_paths %}
     {% for video_path in video_paths %}
-        <video controls>
+                        <div class="video-container mb-3">
+                            <video controls class="shadow-sm">
             <source src="{{ video_path }}" type="video/mp4">
             您的浏览器不支持视频播放。
         </video>
+                        </div>
     {% endfor %}
-    <button onclick="startQuiz()">开始测验</button>
+                {% else %}
+                    <p class="text-center fs-4">今天没有需要观看的视频哦！</p>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <button class="btn btn-primary btn-lg" onclick="startQuiz()">完成观看，开始测验</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         async function startQuiz() {
             const urlParams = new URLSearchParams(window.location.search);
             const returnDay = urlParams.get('return_day') || '{{ day }}';
-            console.log("Video return_day:", returnDay); // 调试：检查使用的 return_day
 
             try {
                 const response = await fetch(`/video/{{ user_id }}/{{ day }}?return_day=${returnDay}`, {
@@ -52,12 +49,11 @@
                     headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await response.json();
-                console.log("Video response:", data); // 调试：检查后端返回的 JSON
 
-                if (data.status === "success" && data.next === "quiz") {
+                if (response.ok && data.status === "success" && data.next === "quiz") {
                     window.location.href = `/quiz/{{ user_id }}/${data.day}`;
                 } else {
-                    alert('无法更新视频观看状态，请重试');
+                    alert(data.message || '无法更新视频观看状态，请重试');
                 }
             } catch (error) {
                 console.error('Error:', error);

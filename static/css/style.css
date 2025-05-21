@@ -1,29 +1,591 @@
+:root {
+    --primary-color: #5CABE5; /* 友好的天空蓝 */
+    --primary-dark: #4A8DC2;
+    --secondary-color: #FFD966; /* 温暖的淡黄 */
+    --success-color: #77DD77; /* 柔和的绿色 */
+    --info-color: #78C8D7;    /* 温和的青色 */
+    --warning-color: #FFB74D; /* 柔和的橙色 */
+    --danger-color: #FF6961;  /* 柔和的红色 */
+    --light-color: #FDFDFF;   /* 近乎白色 */
+    --dark-color: #4A4A4A;    /* 深灰色文字 */
+    --text-color: #333; /*保持不变或微调*/
+    --border-radius: 12px; /* 更圆润的边角 */
+    --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); /* 更柔和的阴影 */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    font-family: "Nunito", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    line-height: 1.7;
+    font-size: 16px; /* 默认字体大小 */
+    padding-top: 20px; /* 给导航栏留出空间 (如果以后添加的话) */
+    padding-bottom: 20px;
 }
-h1, h2 {
-    color: #333;
+
+/* 确保 Bootstrap 的 container 类在 body padding 内正确工作 */
+.container, .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
 }
-.question {
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+
+
+/* 标题样式 - 增大字体，更友好 */
+h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: var(--primary-dark);
 }
-button {
-    padding: 10px 20px;
-    background-color: #007BFF;
+
+h1 {
+    font-size: 2.8rem; /* 更大的H1 */
+    margin-bottom: 2rem;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+h2 {
+    font-size: 2rem; /* 更大的H2 */
+    /* border-bottom: 2px solid var(--secondary-color); remove this, let card header handle it */
+    padding-bottom: 0.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-dark);
+}
+
+/* 卡片样式 - 使用 Bootstrap 的 card 类，这里可以进行微调 */
+.card {
+    border: none; /* 移除默认边框，依赖阴影 */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem; /* 增加卡片间距 */
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 20px rgba(92, 171, 229, 0.2); /* 悬停时更明显的阴影 */
+    transform: translateY(-5px);
+}
+
+.card-header {
+    background-color: var(--primary-color);
     color: white;
-    border: none;
-    border-radius: 5px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 2rem; /* 增加卡片内部填充 */
+}
+
+/* 表单元素样式 - Bootstrap 会处理大部分，这里可以进行微调 */
+label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.8rem; /* 标签和输入框的间距 */
+    font-size: 1.1rem;
+}
+
+.form-control, .form-select {
+    border-radius: var(--border-radius);
+    padding: 0.9rem 1.2rem; /* 增大输入框填充 */
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color), 0.25);
+}
+
+
+/* 按钮样式 - Bootstrap .btn 会作为基础，这里可以定义主题色按钮 */
+.btn {
+    padding: 0.8rem 1.8rem; /* 增大按钮填充 */
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    margin: 0.5rem; /* 给按钮之间一些空间 */
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+}
+.btn-success:hover {
+    background-color: #5CB85C; /* Slightly darker green */
+    border-color: #5CB85C;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #D9534F; /* Slightly darker red */
+    border-color: #D9534F;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* 单选和复选框组 - 增加间距 */
+/* Commenting out old radio styles, will be replaced by new ones below
+.radio-group div, .checkbox-group div {
+    margin-bottom: 0.8rem;
+}
+.radio-group input[type="radio"],
+.checkbox-group input[type="checkbox"] {
+    margin-right: 0.8rem;
+    transform: scale(1.2); 
+}
+.radio-group label, .checkbox-group label {
+    font-weight: normal; 
+    font-size: 1rem;
+}
+*/
+
+/* 新的、更适合儿童的选择题选项样式 */
+.question .radio-group .form-check {
+    margin-bottom: 0.85rem; /* 选项之间的垂直间距 */
+    padding: 0; /* 移除 Bootstrap form-check 的默认 padding */
+}
+
+.question .radio-group .form-check-input {
+    display: none; /* 隐藏原始的 radio 按钮 */
+}
+
+.question .radio-group .form-check-label {
+    display: block; /* 使标签充满整个宽度 */
+    width: 100%;
+    padding: 0.9rem 1.2rem; /* 适中的内边距，使其像一个按钮 */
+    border: 2px solid var(--secondary-color); /* 使用温暖的淡黄色边框 */
+    border-radius: var(--border-radius); /* 圆角 */
+    background-color: #fff; /* 白色背景 */
+    color: var(--dark-color); /* 深色文字 */
+    font-size: 1.15rem; /* 更大的字体，适合儿童 */
+    font-weight: 600; /* 加粗字体 */
+    text-align: center; /* 文字居中 */
     cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.06); /* 轻微的阴影增加立体感 */
 }
-button:hover {
-    background-color: #0056b3;
+
+.question .radio-group .form-check-label:hover {
+    background-color: var(--secondary-color); /* 悬停时背景变为淡黄色 */
+    color: var(--primary-dark); /* 文字颜色变为深蓝 */
+    border-color: var(--primary-color); /* 边框变为天空蓝 */
+    transform: translateY(-2px); /* 轻微上移效果 */
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1); /* 悬停时阴影加深 */
 }
+
+.question .radio-group .form-check-input:checked + .form-check-label {
+    background-color: var(--primary-color); /* 选中时背景变为天空蓝 */
+    color: white; /* 文字变为白色 */
+    border-color: var(--primary-dark); /* 边框变为深蓝色 */
+    box-shadow: 0 2px 4px rgba(92, 171, 229, 0.3); /* 选中时的阴影 */
+    transform: translateY(0); /* 重置悬停时的上移效果 */
+}
+
+/* 为键盘导航添加焦点样式 */
+.question .radio-group .form-check-input:focus + .form-check-label {
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color), 0.35);
+}
+
+
+/* 问题样式 */
+.question {
+    background-color: #fff; /* 卡片内部的独立问题区域 */
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-left: 5px solid var(--secondary-color); /* 使用次要颜色作为强调 */
+}
+.question p {
+    font-size: 1.2rem; /* 问题文本稍大 */
+    margin-bottom: 1rem;
+}
+
+/* 录音按钮样式 */
+.recording-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* padding: 0.6rem 1.2rem; */ /* Bootstrap .btn 会处理 */
+}
+
+.recording-btn::before {
+    content: "🎤";
+    margin-right: 0.8rem; /* 图标和文字间距 */
+    font-size: 1.2em;
+}
+
+.recording-btn.recording {
+    background-color: var(--danger-color); /* 使用统一定义的危险色 */
+    border-color: var(--danger-color);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.recording-status {
+    display: inline-block;
+    margin-left: 1rem;
+    font-style: italic;
+    color: var(--dark-color);
+    font-weight: 500;
+}
+
+/* 视频播放器样式 */
 video {
     width: 100%;
+    max-width: 720px; /* 调整最大宽度 */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 1.5rem auto;
+    display: block;
+    background-color: #000; /* 防止透明边框 */
+}
+
+/* 特殊页面居中容器 (rest, done, encourage) */
+.centered-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 40px); /* 减去 body padding */
+    text-align: center;
+}
+.centered-container .card {
     max-width: 600px;
-    margin-bottom: 20px;
+    width: 90%;
+}
+
+.emoji {
+    font-size: 5rem; /* 增大 emoji */
+    margin-bottom: 1.5rem;
+}
+
+.emoji.bounce { /* for encourage page */
+    animation: bounce 1.2s infinite alternate;
+}
+
+@keyframes bounce {
+    from { transform: translateY(0) scale(1); }
+    to { transform: translateY(-15px) scale(1.05); }
+}
+
+/* 五彩纸屑和星星的容器 */
+.confetti-canvas, .stars-background {
+    position: fixed; /* 使用 fixed 定位充满屏幕 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1; /* 确保在内容之下 */
+}
+
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+    body {
+        font-size: 15px;
+    }
+    h1 {
+        font-size: 2.2rem;
+    }
+    h2 {
+        font-size: 1.7rem;
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+    .btn {
+        padding: 0.7rem 1.5rem;
+        font-size: 1rem;
+    }
+    .question p {
+        font-size: 1.1rem;
+    }
+    .emoji {
+        font-size: 4rem;
+    }
+}
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 2rem;
+    }
+    h2 {
+        font-size: 1.5rem;
+    }
+    .card-header {
+        font-size: 1.25rem;
+    }
+    .question {
+        padding: 1rem;
+    }
+}
+
+/* Custom styles for Matching Questions */
+.matching-question .matching-prompt {
+    background-color: #e9ecef; /* Light grey background for the prompt */
+    border: 1px solid #ced4da;
+    border-radius: .375rem; /* Bootstrap default border-radius */
+    font-weight: 600;
+}
+
+.matching-options .matching-option {
+    border-width: 2px;
+    transition: all 0.2s ease-in-out;
+    padding: 0.5rem 1rem; /* Adjust padding for better touch targets */
+}
+
+.matching-options .matching-option.selected {
+    /* Styles for selected option already handled by adding .btn-primary and .text-white */
+    /* You can add additional specific styles here if needed, e.g., a thicker border or a specific icon */
+    font-weight: bold;
+}
+
+/* Ensure the arrow icon is vertically centered if you use one */
+.matching-question .fa-long-arrow-alt-right {
+    line-height: inherit; /* Align with the text in the prompt box */
+    color: var(--bs-primary); /* Use Bootstrap primary color or a custom one */
+}
+
+/* Responsive adjustments for matching questions */
+@media (max-width: 767.98px) {
+    .matching-question .row > div {
+        margin-bottom: 0.5rem; /* Add some space between prompt and options on small screens */
+    }
+    .matching-question .fa-long-arrow-alt-right {
+        transform: rotate(90deg); /* Point arrow downwards on small screens */
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .matching-options {
+        justify-content: flex-start !important; /* Align options to the start on small screens */
+    }
+}
+
+/* Custom styles for Spelling Questions */
+.spelling-question .selected-letters-display {
+    border: 2px dashed var(--secondary-color);
+    background-color: #f8f9fa;
+    color: var(--primary-dark);
+    font-weight: bold;
+    min-height: 60px; /* Ensure it has some height even when empty */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.2em; /* Add more spacing between letters */
+    font-size: 1.8rem; /* Make letters larger */
+}
+
+.spelling-question .letter-options .letter-option {
+    font-size: 1.25rem; /* Larger text on buttons */
+    min-width: 55px; /* Ensure buttons have a decent width */
+    min-height: 55px; /* Ensure buttons have a decent height */
+    display: inline-flex; /* Helps with vertical alignment if content varies */
+    align-items: center;
+    justify-content: center;
+    margin: 0.3rem !important; /* Consistent margin using !important to override Bootstrap if needed */
+}
+
+.spelling-question .letter-options .letter-option:hover {
+    transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+.spelling-question .spelling-controls .btn {
+    font-size: 0.9rem; /* Smaller control buttons */
+    padding: 0.4rem 0.8rem; /* Adjust padding for smaller buttons */
+}
+
+/* Responsive adjustments for spelling questions */
+@media (max-width: 576px) {
+    .spelling-question .selected-letters-display {
+        font-size: 1.5rem;
+        min-height: 50px;
+        letter-spacing: 0.15em;
+    }
+    .spelling-question .letter-options .letter-option {
+        font-size: 1.1rem;
+        min-width: 45px;
+        min-height: 45px;
+        margin: 0.2rem !important;
+    }
+}
+
+/* Custom styles for Matching Game */
+.matching-game {
+  margin-top: 1.5rem;
+}
+
+.matching-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.difficulty-btn {
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  border: none;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.difficulty-btn.easy {
+  background-color: #f0f9f0;
+  color: #22c55e;
+}
+
+.difficulty-btn.medium {
+  background-color: #fef3c7;
+  color: #f59e0b;
+}
+
+.difficulty-btn.hard {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.difficulty-btn.active.easy {
+  background-color: #22c55e;
+  color: white;
+}
+
+.difficulty-btn.active.medium {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.difficulty-btn.active.hard {
+  background-color: #ef4444;
+  color: white;
+}
+
+.reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #e0e7ff;
+  color: #4f46e5;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  border: none;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  background-color: #c7d2fe;
+}
+
+.matching-container {
+  min-height: 400px;
+}
+
+.matching-item {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #e5e7eb;
+  background-color: white;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.matching-item:hover:not(.connected) {
+  border-color: #c7d2fe;
+  background-color: #eef2ff;
+}
+
+.matching-item.selected {
+  background-color: #eef2ff;
+  border-color: #818cf8;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%);
+  transform: scale(1.05);
+}
+
+.matching-item.connected {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+  color: #15803d;
+  cursor: default;
+}
+
+.connection-lines path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.connection-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw 1s forwards;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.progress {
+  flex: 1;
+  height: 0.5rem;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  min-width: 3rem;
+  text-align: right;
 }

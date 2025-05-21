@@ -1,56 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Completed</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #2196F3;
-        }
-        .congrats {
-            font-size: 20px;
-            color: #555;
-            margin: 20px 0;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #1976D2;
-        }
-    </style>
+    <title>课程已完成</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Nunito) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Congratulations!</h1>
-        <p class="congrats">You have successfully completed the course!</p>
+    <canvas id="confetti" class="confetti-canvas"></canvas>
+    <div class="container centered-container">
+        <div class="card shadow-lg text-center">
+            <div class="card-body p-5">
+                <div class="emoji mb-3">🎉</div>
+                <h1 class="display-4 mb-3" style="color: var(--primary-color);">恭喜您！</h1>
+                <p class="fs-4 mb-4">您已成功完成所有课程内容！太棒啦！</p>
         {% if user_id %}
-            <p>User: {{ user_id }}</p>
+                    <p class="text-muted">用户: {{ user_id }}</p>
         {% endif %}
-        <button onclick="window.location.href='/'">Back to Home</button>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-success btn-lg">返回首页</a>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth = window.innerWidth;
+        let canvasHeight = window.innerHeight;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        const pieces = [];
+        const numberOfPieces = 150; // 增加纸屑数量
+        const colors = ['#5CABE5', '#FFD966', '#77DD77', '#FFB74D', '#FF6961', '#78C8D7']; // 使用主题色
+        
+        function createPieces() {
+            pieces.length = 0; // 清空数组以便重新开始
+            for (let i = 0; i < numberOfPieces; i++) {
+                pieces.push({
+                    x: Math.random() * canvasWidth,
+                    y: Math.random() * canvasHeight - canvasHeight, // 从顶部开始
+                    size: Math.random() * 12 + 8, // 稍大一些的纸屑
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedX: (Math.random() - 0.5) * 4, // 横向速度
+                    speedY: Math.random() * 3 + 2, // 纵向速度
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 8 // 更快的旋转
+                });
+            }
+        }
+        
+        function drawPieces() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            
+            pieces.forEach((piece, index) => {
+                ctx.save();
+                ctx.translate(piece.x + piece.size / 2, piece.y + piece.size / 2);
+                ctx.rotate((piece.rotation * Math.PI) / 180);
+                
+                ctx.fillStyle = piece.color;
+                // 绘制不同形状的纸屑
+                if (index % 3 === 0) {
+                    ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size / 2); // 长条
+                } else if (index % 3 === 1) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, piece.size / 2, 0, Math.PI * 2);
+                    ctx.fill(); // 圆形
+                } else {
+                     ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size); // 方形
+                }
+                
+                ctx.restore();
+                
+                piece.x += piece.speedX;
+                piece.y += piece.speedY;
+                piece.rotation += piece.rotationSpeed;
+                
+                // 当纸屑移出屏幕时重置
+                if (piece.y > canvasHeight + piece.size || piece.x < -piece.size || piece.x > canvasWidth + piece.size) {
+                    pieces[index] = null; // 标记以便移除或重置
+                     // 重新在顶部生成一个新的纸屑
+                    pieces[index] = {
+                        x: Math.random() * canvasWidth,
+                        y: -20, // 从屏幕上方开始
+                        size: Math.random() * 12 + 8,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        speedX: (Math.random() - 0.5) * 4,
+                        speedY: Math.random() * 3 + 2,
+                        rotation: Math.random() * 360,
+                        rotationSpeed: (Math.random() - 0.5) * 8
+                    };
+                }
+            });
+            
+            requestAnimationFrame(drawPieces);
+        }
+
+        window.addEventListener('resize', () => {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            createPieces(); // 窗口大小改变时重新生成纸屑
+        });
+        
+        createPieces();
+        drawPieces();
+    </script>
 </body>
 </html>
