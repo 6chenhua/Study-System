@@ -32,11 +32,14 @@ However, due to the possible error of the speech recognition tool, the transcrip
 
 Task: 
 Please determine whether the following two texts are basically the same, i.e. determine whether the transcription error comes from the speech recognition tool itself rather than the user reading aloud error. Note that you need to output in json format, the json output has two fields: one is_corrected, this field has only two values, they are true and false, true means that the user read aloud correctly, but the transcription tool recognition error; false: that the user read aloud incorrectly, the inaccuracy of the transcription result is the user's own problem. The other field is reason, which indicates the explanation of the judgment result.
+In addition to checking the similarity of the text, the similarity between the pronunciation of the transcribed text and that of the source text is also very important.
 
 The original text that the user should read aloud: {{text}} 
 Speech recognition transcription result: {{transcribed_text}}
+
+Please try to check as loosely as possible, because the model used for transcription doesn't perform very well.
 '''
-    prompt = prompt.replace("{{text}}", "I have a schoolbag.").replace("{{transcribed_text}}", "I have a school bag.")
+    prompt = prompt.replace("{{text}}", "Nose").replace("{{transcribed_text}}", "No, is it?")
     res = query_llm(prompt)
-    res = json.loads(res)['is_corrected']
+    # res = json.loads(res)['is_corrected']
     print(res)

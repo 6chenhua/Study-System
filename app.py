@@ -5,6 +5,7 @@ from schedule_manager import ScheduleManager
 from quiz_manager import QuizManager
 from flow_controller import FlowController
 from utils.speech import recognize_speech  # 新增：导入语音识别模块
+import json
 
 app = Flask(__name__)
 
@@ -41,12 +42,23 @@ def index():
             print(f"Day {day} is a rest day, redirecting to rest")
             return redirect(url_for("rest", user_id=user_id, day=day))
         else:
+            # 检查是否是综合测验日期 - day 26
+            is_combined_test = day == schedule_manager.schedule["combined"]
+            
+            # 检查是否有需要观看视频的任务（非综合测验且有初始学习任务）
+            has_initial_learning = any(task["attempt"] == 0 for task in tasks)
+            needs_video = has_initial_learning and not is_combined_test
+            
+            # 检查视频观看状态
             video_watched = user_state.get("video_watched", {}).get(str(day), False)
-            if any(task["attempt"] == 0 for task in tasks) and not video_watched:
+            
+            # 如果需要观看视频且尚未观看
+            if needs_video and not video_watched:
                 print(f"Day {day} has initial learning, redirecting to video")
                 return redirect(url_for("video", user_id=user_id, day=day))
-            print(f"Day {day} has review, redirecting to quiz")
-            return redirect(url_for("quiz", user_id=user_id, day=day))
+            else:
+                print(f"Day {day} has review or combined test, redirecting to quiz")
+                return redirect(url_for("quiz", user_id=user_id, day=day))
 
     return render_template("index.html")
 
@@ -63,6 +75,12 @@ def video(user_id, day):
         return redirect(url_for("index"))
 
     if request.method == "GET":
+        # 获取视频观看状态
+        video_watched = user_state.get("video_watched", {}).get(str(day), False)
+        
+        # 输出调试信息
+        print(f"视频页面请求: user_id={user_id}, day={day}, video_watched={video_watched}")
+        
         # 生成视频路径（假设基于 unit 和 type）
         video_paths = []
         for task in tasks:
@@ -74,20 +92,153 @@ def video(user_id, day):
             print(f"No video available for day {day}, redirecting to quiz")
             return redirect(url_for("quiz", user_id=user_id, day=day))
 
-        return render_template("video.html", user_id=user_id, day=day, video_paths=video_paths)
+        return render_template("video.html", user_id=user_id, day=day, video_paths=video_paths, video_watched=video_watched)
 
     elif request.method == "POST":
-        # 更新 video_watched 状态
-        if "video_watched" not in user_state:
-            user_state["video_watched"] = {}
-        user_state["video_watched"][str(day)] = True
-        user_manager.save_user(user_state)
+        try:
+            # 打印日志，验证请求是否正确到达
+            print(f"收到视频观看完成POST请求: user_id={user_id}, day={day}")
+            
+            # 确保用户状态中有video_watched字段
+            if "video_watched" not in user_state:
+                user_state["video_watched"] = {}
+            
+            # 设置当前日期为已观看
+            user_state["video_watched"][str(day)] = True
+            
+            # 保存用户状态前打印调试信息
+            print(f"保存前的视频观看状态: {user_state.get('video_watched', {})}")
+            
+            # 保存用户状态
+            save_result = user_manager.save_user(user_state)
+            
+            # 验证是否保存成功
+            print(f"用户状态保存结果: {save_result}")
+            
+            # 重新加载用户状态，验证更改是否持久化
+            reloaded_user = user_manager.load_user(user_id)
+            if reloaded_user:
+                saved_video_watched = reloaded_user.get("video_watched", {}).get(str(day), False)
+                print(f"重新加载后的视频观看状态: {reloaded_user.get('video_watched', {})}")
+                print(f"重新加载后的当天视频观看状态: {saved_video_watched}")
+                
+                # 如果保存失败，尝试强制将状态写入文件
+                if not saved_video_watched:
+                    print("检测到状态未正确保存，尝试强制写入方法")
+                    force_result = user_manager.force_save_video_watched(user_id, day, True)
+                    print(f"强制保存结果: {force_result}")
+                    
+                    # 验证强制保存结果
+                    verify_user = user_manager.load_user(user_id)
+                    if verify_user and verify_user.get("video_watched", {}).get(str(day), False):
+                        print("强制保存验证成功")
+                    else:
+                        print("强制保存验证失败")
+            else:
+                print("无法重新加载用户状态进行验证")
+            
+            # 从查询参数获取return_day
+            return_day = request.args.get("return_day", day, type=int)
+            print(f"视频观看完成，准备跳转到测验: day={day}, return_day={return_day}")
+            
+            return jsonify({
+                "next": "quiz", 
+                "user_id": user_id, 
+                "day": return_day, 
+                "status": "success",
+                "message": "视频观看状态已更新"
+            })
+        except Exception as e:
+            print(f"更新视频观看状态错误: {str(e)}")
+            return jsonify({
+                "status": "error", 
+                "message": f"更新视频观看状态失败: {str(e)}"
+            }), 500
 
-        # 从查询参数或 JSON 中获取 return_day（如果有）
-        return_day = request.args.get("return_day", day, type=int)  # 默认返回当前 day
-        print(f"Video watched for day {day}, redirecting to quiz for day {return_day}")
-        return jsonify({"next": "quiz", "user_id": user_id, "day": return_day, "status": "success"})
+@app.route("/force_video_watched/<user_id>/<int:day>", methods=["POST"])
+def force_video_watched(user_id, day):
+    """强制设置视频观看状态为已观看"""
+    try:
+        # 记录日志
+        print(f"收到强制设置视频观看状态请求: user_id={user_id}, day={day}")
+        
+        # 使用强制保存方法
+        result = user_manager.force_save_video_watched(user_id, day, True)
+        
+        if result:
+            print(f"已强制设置用户 {user_id} 的第 {day} 天视频观看状态为已观看")
+            return jsonify({
+                "status": "success",
+                "video_watched": True,
+                "message": "已强制设置视频观看状态",
+                "next": "quiz",
+                "day": day
+            })
+        else:
+            print(f"强制设置视频观看状态失败")
+            return jsonify({
+                "status": "error",
+                "message": "强制设置失败，请重试",
+                "video_watched": False
+            }), 500
+    except Exception as e:
+        print(f"强制设置视频观看状态错误: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"操作失败: {str(e)}",
+            "video_watched": False
+        }), 500
 
+@app.route("/verify_video_watched/<user_id>/<int:day>", methods=["GET"])
+def verify_video_watched(user_id, day):
+    """验证用户是否已观看指定日期的视频"""
+    try:
+        # 加载用户状态
+        user_state = user_manager.load_user(user_id)
+        if not user_state:
+            return jsonify({
+                "status": "error",
+                "message": "用户不存在",
+                "video_watched": False
+            }), 404
+        
+        # 获取视频观看状态
+        video_watched = user_state.get("video_watched", {}).get(str(day), False)
+        print(f"验证视频观看状态: user_id={user_id}, day={day}, video_watched={video_watched}")
+        
+        # 如果未观看，检查备份文件
+        if not video_watched:
+            # 检查备份文件
+            backup_path = f"user_state/{user_id}.json.bak"
+            if os.path.exists(backup_path):
+                try:
+                    with open(backup_path, "r", encoding="utf-8") as f:
+                        backup_state = json.load(f)
+                        backup_watched = backup_state.get("video_watched", {}).get(str(day), False)
+                        print(f"备份文件中的视频观看状态: {backup_watched}")
+                        
+                        # 如果备份文件中显示已观看，则更新主文件
+                        if backup_watched:
+                            user_state["video_watched"][str(day)] = True
+                            user_manager.save_user(user_state)
+                            video_watched = True
+                            print(f"从备份恢复视频观看状态: {video_watched}")
+                except Exception as e:
+                    print(f"检查备份文件出错: {str(e)}")
+        
+        return jsonify({
+            "status": "success",
+            "video_watched": video_watched,
+            "day": day,
+            "user_id": user_id
+        })
+    except Exception as e:
+        print(f"验证视频观看状态错误: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"验证失败: {str(e)}",
+            "video_watched": False
+        }), 500
 
 @app.route("/update_video_watched/<user_id>/<int:day>", methods=["POST"])
 def update_video_watched(user_id, day):
@@ -95,14 +246,38 @@ def update_video_watched(user_id, day):
     if not user_state:
         return jsonify({"status": "error", "message": "User not found"}), 404
 
-    if "video_watched" not in user_state:
-        user_state["video_watched"] = {}
-    user_state["video_watched"][str(day)] = True
-    user_manager.save_user(user_state)
+    try:
+        # 确保用户状态中有video_watched字段
+        if "video_watched" not in user_state:
+            user_state["video_watched"] = {}
+        
+        # 设置当前日期为已观看
+        user_state["video_watched"][str(day)] = True
+        
+        # 保存用户状态
+        save_result = user_manager.save_user(user_state)
+        
+        # 验证是否保存成功
+        print(f"通过update_video_watched更新: user_id={user_id}, day={day}")
+        print(f"用户状态保存结果: {save_result}")
+        print(f"更新后的video_watched状态: {user_state.get('video_watched', {})}")
 
-    return_day = request.args.get("return_day", day, type=int)
-    print(f"Updated video_watched for day {day}, redirecting to quiz for day {return_day}")
-    return jsonify({"status": "success", "next": "quiz", "user_id": user_id, "day": return_day})
+        return_day = request.args.get("return_day", day, type=int)
+        print(f"更新视频观看状态成功，准备跳转到测验: day={day}, return_day={return_day}")
+        
+        return jsonify({
+            "status": "success", 
+            "next": "quiz", 
+            "user_id": user_id, 
+            "day": return_day,
+            "message": "视频观看状态已更新"
+        })
+    except Exception as e:
+        print(f"更新视频观看状态错误: {str(e)}")
+        return jsonify({
+            "status": "error", 
+            "message": f"更新视频观看状态失败: {str(e)}"
+        }), 500
 
 @app.route("/next_day/<user_id>/<int:day>")
 def next_day(user_id, day):
@@ -128,11 +303,23 @@ def next_day(user_id, day):
         print(f"Day {next_day_num} is a rest day")
         return redirect(url_for("rest", user_id=user_id, day=next_day_num))
     else:
-        if any(task["attempt"] == 0 for task in next_tasks):
+        # 检查是否是综合测验日期 - day 26
+        is_combined_test = next_day_num == schedule_manager.schedule["combined"]
+        
+        # 检查是否有需要观看视频的任务（非综合测验且有初始学习任务）
+        has_initial_learning = any(task["attempt"] == 0 for task in next_tasks)
+        needs_video = has_initial_learning and not is_combined_test
+        
+        # 检查视频观看状态
+        video_watched = user_state.get("video_watched", {}).get(str(next_day_num), False)
+        
+        # 如果需要观看视频且尚未观看
+        if needs_video and not video_watched:
             print(f"Next day {next_day_num} has initial learning, redirecting to video")
             return redirect(url_for("video", user_id=user_id, day=next_day_num))
-        print(f"Next day {next_day_num} has review, redirecting to quiz")
-        return redirect(url_for("quiz", user_id=user_id, day=next_day_num))
+        else:
+            print(f"Next day {next_day_num} has review or combined test, redirecting to quiz")
+            return redirect(url_for("quiz", user_id=user_id, day=next_day_num))
 
 @app.route("/rest/<user_id>/<int:day>")
 def rest(user_id, day):
@@ -166,19 +353,18 @@ def encourage(user_id, day):
 @app.route("/quiz/<user_id>/<int:day>", methods=["GET", "POST"])
 def quiz(user_id, day):
     user_state = user_manager.load_user(user_id)
+    
+    # 打印调试信息
+    print(f"测验页面请求: user_id={user_id}, day={day}")
+    
     print(f"Loaded user_state in /quiz: {user_state}")
     if not user_state or user_state["progress"] == "completed":
-        print(f"User {user_id} not found or course completed, redirecting to index")
+        print(f"User {user_id} not found or course completed")
         return redirect(url_for("index"))
 
     tasks = schedule_manager.get_tasks(day)
-    print(f"Tasks for day {day}: {tasks}")
     if not tasks:
-        next_day = day + 1
-        user_state["current_day"] = next_day
-        user_manager.save_user(user_state)
-        print(f"No tasks for day {day}, moving to day {next_day}")
-        if next_day > schedule_manager.schedule["combined"]:
+        if day > schedule_manager.schedule["combined"]:
             user_state["progress"] = "completed"
             user_manager.save_user(user_state)
             print("Course completed, redirecting to done")
@@ -186,12 +372,13 @@ def quiz(user_id, day):
         print(f"Day {day} is a rest day, redirecting to rest")
         return redirect(url_for("rest", user_id=user_id, day=day))
 
-    if "current_task_index" not in user_state or user_state["current_day"] != day:
-        user_state["current_task_index"] = 0
-        user_state["current_day"] = day
+    # 确保视频观看状态字段存在
+    if "video_watched" not in user_state:
+        user_state["video_watched"] = {}
+        print(f"为用户 {user_id} 在测验页面添加缺失的video_watched字段")
         user_manager.save_user(user_state)
-        print(f"Reset current_task_index to 0 for day {day}")
-    current_task_index = user_state["current_task_index"]
+
+    current_task_index = user_state.get("current_task_index", 0)
     print(f"Current task index: {current_task_index}, Total tasks: {len(tasks)}")
 
     if request.method == "GET":
@@ -218,10 +405,51 @@ def quiz(user_id, day):
         current_task = tasks[current_task_index]
         print(f"Processing task {current_task_index + 1}/{len(tasks)}: {current_task}")
 
+        # 检查是否是综合测验日期 - day 26
+        is_combined_test = day == schedule_manager.schedule["combined"]
+        
+        # 检查视频观看状态 - 如果需要看视频但未看完，则重定向到视频页面
         video_watched = user_state.get("video_watched", {}).get(str(day), False)
-        if current_task["attempt"] == 0 and not video_watched:
-            print(f"Task {current_task_index + 1} requires video, redirecting to video")
-            return redirect(url_for("video", user_id=user_id, day=day))
+        needs_video = current_task["attempt"] == 0 and not is_combined_test
+        
+        # 打印更详细的调试信息
+        print(f"视频观看检查: day={day}, is_combined_test={is_combined_test}")
+        print(f"视频观看状态: video_watched={video_watched}, needs_video={needs_video}")
+        print(f"用户视频观看记录: {user_state.get('video_watched', {})}")
+        
+        # 如果需要观看视频，进行全面检查
+        if needs_video and not video_watched:
+            # 检查备份文件中的状态
+            try:
+                backup_path = f"user_state/{user_id}.json.bak"
+                if os.path.exists(backup_path):
+                    with open(backup_path, "r", encoding="utf-8") as f:
+                        backup_state = json.load(f)
+                        backup_watched = backup_state.get("video_watched", {}).get(str(day), False)
+                        print(f"备份文件中的视频观看状态: {backup_watched}")
+                        
+                        # 如果备份文件表明已观看，则恢复状态并继续
+                        if backup_watched:
+                            user_state["video_watched"][str(day)] = True
+                            user_manager.save_user(user_state)
+                            video_watched = True
+                            print(f"从备份恢复视频观看状态: {video_watched}")
+            except Exception as e:
+                print(f"检查备份文件出错: {str(e)}")
+                
+            # 即使从备份恢复，也要再次检查视频状态
+            if not video_watched:
+                # 检查请求中的强制参数
+                force_continue = request.args.get("force_continue", "false")
+                if force_continue.lower() == "true":
+                    print(f"强制继续，跳过视频观看检查: day={day}")
+                    # 自动标记为已观看，方便后续流程
+                    user_state["video_watched"][str(day)] = True
+                    user_manager.save_user(user_state)
+                else:
+                    print(f"视频尚未观看完成，重定向到视频页面：day={day}")
+                    # 添加一条提示消息，通知用户他们需要先观看视频
+                    return redirect(url_for("video", user_id=user_id, day=day, message="请先完成视频观看"))
 
         questions = {}
         # 跟踪已添加的匹配题ID - 临时禁用过滤
@@ -335,11 +563,6 @@ def quiz(user_id, day):
                         break
                 if video_day != day:
                     break
-
-        if correct_rate < threshold:
-            if "video_watched" in user_state and str(video_day) in user_state["video_watched"]:
-                user_state["video_watched"][str(video_day)] = False
-                print(f"Reset video_watched for day {video_day} due to task failure")
 
         user_manager.save_user(user_state)
 

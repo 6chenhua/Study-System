@@ -1,0 +1,25 @@
+{
+    "user_id": "test_user",
+    "style": "visual",
+    "current_day": 1,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {}
+}

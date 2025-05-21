@@ -1,7 +1,7 @@
 {
     "user_id": "Chenhua",
     "style": "analytic_verbal",
-    "current_day": 1,
+    "current_day": 9,
     "progress": "started",
     "units": {
         "unit1": {
@@ -21,6 +21,11 @@
                         "day": 4,
                         "correct_rate": 1.0,
                         "wrong_questions": []
+                    },
+                    {
+                        "day": 8,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             },
@@ -35,13 +40,35 @@
                         "day": 4,
                         "correct_rate": 1.0,
                         "wrong_questions": []
+                    },
+                    {
+                        "day": 6,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             }
         },
         "unit2": {
             "word": {
-                "attempts": []
+                "attempts": [
+                    {
+                        "day": 9,
+                        "correct_rate": 0.0,
+                        "wrong_questions": [
+                            {
+                                "question": "耳朵的英文是？",
+                                "options": [
+                                    "ear",
+                                    "eye"
+                                ],
+                                "answer": "ear",
+                                "id": "unit2_word_choice_0",
+                                "user_answer": "eye"
+                            }
+                        ]
+                    }
+                ]
             },
             "sentence": {
                 "attempts": []

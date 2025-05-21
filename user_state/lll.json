@@ -1,0 +1,94 @@
+{
+    "user_id": "lll",
+    "style": "analytic_verbal",
+    "current_day": 2,
+    "progress": "started",
+    "units": {
+        "unit1": {
+            "word": {
+                "attempts": [
+                    {
+                        "day": 1,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 2,
+                        "correct_rate": 0.25,
+                        "wrong_questions": [
+                            {
+                                "question": "书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_2",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_3",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_4",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "书本的英文是？",
+                                "options": [
+                                    "book",
+                                    "ruler"
+                                ],
+                                "answer": "book",
+                                "id": "unit1_word_choice_5",
+                                "user_answer": "ruler"
+                            },
+                            {
+                                "question": "读：'I have a pencil.'",
+                                "answer": "I have a pencil.",
+                                "id": "unit1_word_read_aloud_0",
+                                "model_audio_url": "/static/audio/unit1_word_read_aloud_0.mp3",
+                                "user_answer": null
+                            },
+                            {
+                                "question": "读：'I have a schoolbag.'",
+                                "answer": "I have a schoolbag.",
+                                "id": "unit1_word_read_aloud_1",
+                                "model_audio_url": null,
+                                "user_answer": null
+                            }
+                        ]
+                    }
+                ]
+            },
+            "sentence": {
+                "attempts": []
+            }
+        },
+        "unit2": {
+            "word": {
+                "attempts": []
+            },
+            "sentence": {
+                "attempts": []
+            }
+        }
+    },
+    "video_watched": {
+        "1": true
+    },
+    "current_task_index": 0
+}

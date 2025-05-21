@@ -1,8 +1,8 @@
 {
     "user_id": "小于零",
     "style": "holistic_verbal",
-    "current_day": 16,
-    "progress": "started",
+    "current_day": 27,
+    "progress": "completed",
     "units": {
         "unit1": {
             "word": {
@@ -68,6 +68,11 @@
                         "day": 10,
                         "correct_rate": 1.0,
                         "wrong_questions": []
+                    },
+                    {
+                        "day": 17,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             }
@@ -92,52 +97,13 @@
                     },
                     {
                         "day": 16,
-                        "correct_rate": 0.5555555555555556,
-                        "wrong_questions": [
-                            {
-                                "left": "ear",
-                                "right": "耳朵",
-                                "question": "Match: ear",
-                                "answer": "耳朵",
-                                "options": [
-                                    "耳朵"
-                                ],
-                                "id": "unit2_word_matching_3",
-                                "match_prompt": "Match",
-                                "user_answer": ""
-                            },
-                            {
-                                "left": "ruler",
-                                "right": "尺子",
-                                "question": "Match: ruler",
-                                "answer": "尺子",
-                                "options": [
-                                    "尺子"
-                                ],
-                                "id": "unit2_word_matching_4",
-                                "match_prompt": "Match",
-                                "user_answer": ""
-                            },
-                            {
-                                "left": "face",
-                                "right": "脸",
-                                "question": "Match: face",
-                                "answer": "脸",
-                                "options": [
-                                    "脸"
-                                ],
-                                "id": "unit2_word_matching_5",
-                                "match_prompt": "Match",
-                                "user_answer": ""
-                            },
-                            {
-                                "question": "Read: nose",
-                                "answer": "Nose",
-                                "id": "unit2_word_read_aloud_0",
-                                "model_audio_url": null,
-                                "user_answer": "Nor is it."
-                            }
-                        ]
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 23,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             },
@@ -155,6 +121,27 @@
                     },
                     {
                         "day": 14,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 18,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 25,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    }
+                ]
+            }
+        },
+        "combined": {
+            "all": {
+                "attempts": [
+                    {
+                        "day": 26,
                         "correct_rate": 1.0,
                         "wrong_questions": []
                     }

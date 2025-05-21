@@ -17,14 +17,14 @@
     <div class="container mt-4 mb-5">
         <h1 class="mb-4">第{{ day }}天 - 练习</h1>
         
-        <form id="practiceForm" data-user-id="{{ user_id }}" data-day="{{ day }}">
+    <form id="practiceForm" data-user-id="{{ user_id }}" data-day="{{ day }}">
             {% for key, q_list in questions.items() %}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">
                         <h2>{{ key.replace('_', ' ') | capitalize }} 练习</h2>
                     </div>
                     <div class="card-body">
-                        {% for question in q_list %}
+            {% for question in q_list %}
                             <div class="question mb-4 p-3">
                                 <p><strong>{{ loop.index }}. {% if question.subtype == "matching" and question.match_prompt %}{{ question.match_prompt }}{% elif question.subtype == "matching" and ":" in question.question %}{{ question.question.split(":")[1] | trim }}{% else %}{{ question.question }}{% endif %}</strong></p>
                                 
@@ -43,12 +43,12 @@
                                 <!-- 根据题型显示不同的输入控件 -->
                                 {% if question.subtype == "choice" and question.options %}
                                     <div class="radio-group">
-                                        {% for option in question.options %}
+                                {% for option in question.options %}
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ option }}">
                                                 <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}">{{ option }}</label>
                                             </div>
-                                        {% endfor %}
+                                {% endfor %}
                                     </div>
                                 {% elif question.subtype == "matching" %}
                                     <div class="matching-game" data-question-id="{{ question.id }}"
@@ -102,15 +102,15 @@
                                                     您的浏览器不支持音频播放。
                                                 </audio>
                                             </div>
-                                        {% endif %}
+                        {% endif %}
                                         <button type="button" class="btn btn-info recording-btn" data-question-id="{{ question.id }}">开始录音</button>
                                         <span class="recording-status ms-2"></span>
                                     </div>
-                                {% else %}
+                    {% else %}
                                     <div class="mt-3">
                                         <input type="text" name="{{ question.id }}" class="form-control form-control-lg" placeholder="请输入您的答案">
                                     </div>
-                                {% endif %}
+                    {% endif %}
                             </div>
                         {% endfor %}
                     </div>
@@ -120,7 +120,7 @@
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-success btn-lg">提交答案</button>
             </div>
-        </form>
+    </form>
     </div>
 
     <!-- Bootstrap JS Bundle -->
@@ -129,43 +129,43 @@
     <script type="module">
         import recorder from '{{ url_for("static", filename="js/recorder.js") }}';
 
-        const form = document.getElementById('practiceForm');
-        const audioData = new Map();
+            const form = document.getElementById('practiceForm');
+            const audioData = new Map();
 
         // Audio recording logic
         document.querySelectorAll('.recording-btn').forEach(btn => {
-            const questionId = btn.dataset.questionId;
+                const questionId = btn.dataset.questionId;
             const status = btn.closest('.question').querySelector('.recording-status');
             let isRecording = false;
 
             btn.addEventListener('click', async () => {
-                if (!isRecording) {
-                    try {
-                        const success = await recorder.startRecording();
-                        if (success) {
-                            btn.textContent = "停止录音";
+                    if (!isRecording) {
+                        try {
+                            const success = await recorder.startRecording();
+                            if (success) {
+                                btn.textContent = "停止录音";
                             btn.classList.remove('btn-info');
                             btn.classList.add('btn-danger', 'recording');
-                            status.textContent = "正在录音...";
-                            isRecording = true;
-                            recorder.setOnRecordingComplete((audioBlob) => {
-                                audioData.set(questionId, audioBlob);
+                                status.textContent = "正在录音...";
+                                isRecording = true;
+                                recorder.setOnRecordingComplete((audioBlob) => {
+                                    audioData.set(questionId, audioBlob);
                                 status.textContent = "录音完成!";
-                                isRecording = false;
+                                    isRecording = false;
                                 btn.textContent = "重新录音";
                                 btn.classList.remove('btn-danger', 'recording');
                                 btn.classList.add('btn-info');
-                            });
-                        }
-                    } catch (err) {
-                        console.error("Recording failed:", err);
+                                });
+                            }
+                        } catch (err) {
+                            console.error("Recording failed:", err);
                         status.textContent = "录音失败 :(";
                         btn.classList.remove('recording', 'btn-danger');
                         btn.classList.add('btn-info');
                         btn.textContent = "开始录音";
-                    }
-                } else {
-                    recorder.stopRecording();
+                        }
+                    } else {
+                        recorder.stopRecording();
                 }
             });
         });
@@ -608,18 +608,18 @@
             const userId = form.dataset.userId;
             const day = form.dataset.day;
             const formData = new FormData();
-            
+
             // Add form inputs to formData
             const inputs = form.querySelectorAll('input[type="text"], input[type="radio"]:checked, select, input[type="hidden"]');
             inputs.forEach(input => {
-                formData.append(input.name, input.value.trim());
+                    formData.append(input.name, input.value.trim());
             });
-            
+
             // Add audio recordings
             audioData.forEach((blob, questionId) => {
                 formData.append(questionId, blob, `${questionId}.webm`);
             });
-            
+
             try {
                 const response = await fetch(`/practice/${userId}/${day}`, {
                     method: 'POST',
@@ -631,12 +631,12 @@
                 if (response.ok) {
                     if (data.next === "practice") {
                         window.location.href = `/practice/${userId}/${day}`;
-                    } else if (data.next === "quiz") {
+                } else if (data.next === "quiz") {
                         window.location.href = `/quiz/${userId}/${day}`;
-                    } else if (data.next === "encourage") {
+                } else if (data.next === "encourage") {
                         window.location.href = `/encourage/${userId}/${day}`;
-                    } else if (data.next === "done") {
-                        window.location.href = `/done/${userId}`;
+                } else if (data.next === "done") {
+                    window.location.href = `/done/${userId}`;
                     } else {
                         alert("未知的下一步，请联系管理员。");
                     }

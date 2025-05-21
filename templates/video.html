@@ -10,17 +10,67 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .progress-banner {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .already-watched-banner {
+            background-color: #cce5ff;
+            color: #004085;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .video-control-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
-<body>
+<body data-video-watched="{{ 'true' if video_watched else 'false' }}">
     <div class="container mt-4 mb-5">
         <h1 class="mb-4">第{{ day }}天 - 学习视频</h1>
+        
+        <div class="progress-banner" id="progressBanner">
+            <strong>重要提示：</strong> 请完整观看每个视频，才能进行测验。
+        </div>
+        
+        <div class="already-watched-banner" id="alreadyWatchedBanner">
+            <strong>您已观看过这些视频！</strong> 您可以直接开始测验，或再次观看视频巩固知识。
+        </div>
+        
+        <div id="redirectMessage" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+            <span id="messageText"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+{#        <div id="debugInfo" class="alert alert-info mb-3" style="display: none;">#}
+{#            <strong>调试信息：</strong>#}
+{#            <div id="debugContent"></div>#}
+{#        </div>#}
         
         <div class="card shadow-sm">
             <div class="card-body">
                 {% if video_paths %}
     {% for video_path in video_paths %}
                         <div class="video-container mb-3">
-                            <video controls class="shadow-sm">
+                            <video controls class="shadow-sm video-element" id="video{{ loop.index }}" data-watched="false">
             <source src="{{ video_path }}" type="video/mp4">
             您的浏览器不支持视频播放。
         </video>
@@ -31,33 +81,441 @@
                 {% endif %}
             </div>
             <div class="card-footer text-center">
-                <button class="btn btn-primary btn-lg" onclick="startQuiz()">完成观看，开始测验</button>
+                <button class="btn btn-primary btn-lg btn-disabled" id="quizButton" onclick="startQuiz()" disabled>请完成视频观看后再开始测验</button>
             </div>
         </div>
     </div>
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 视频控制脚本 -->
     <script>
+        // 通过隐藏的数据属性获取视频观看状态
+        var videoWatched = document.body.getAttribute('data-video-watched') === 'true';
+        
+        // 记录调试信息
+        function logDebug(message) {
+            console.log(message);
+            
+            // 显示调试信息
+            const debugInfo = document.getElementById('debugInfo');
+            const debugContent = document.getElementById('debugContent');
+            
+            if (debugInfo && debugContent) {
+                debugInfo.style.display = 'block';
+                const time = new Date().toLocaleTimeString();
+                debugContent.innerHTML += `<div>[${time}] ${message}</div>`;
+            }
+        }
+        
+        // 输出初始状态
+        logDebug(`视频观看状态初始化: videoWatched=${videoWatched}`);
+        
+        // 获取DOM元素
+        const videos = document.querySelectorAll('.video-element');
+        const quizButton = document.getElementById('quizButton');
+        const progressBanner = document.getElementById('progressBanner');
+        const alreadyWatchedBanner = document.getElementById('alreadyWatchedBanner');
+        
+        // 禁用进度条拖动功能（只在第一次观看时启用）
+        if (!videoWatched) {
+            logDebug('首次观看视频，激活进度条限制');
+            
+            videos.forEach((video, index) => {
+                // 添加自定义控制，覆盖原生控件
+                const videoContainer = video.parentElement;
+                
+                // 创建自定义控制覆盖层
+                const overlay = document.createElement('div');
+                overlay.className = 'video-control-overlay';
+                overlay.title = '首次观看必须完整观看视频，不能拖动进度条';
+                
+                // 添加防止事件穿透的处理
+                overlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('首次观看必须完整观看视频，不能拖动进度条');
+                    return false;
+                });
+                
+                // 使容器相对定位以便放置覆盖层
+                videoContainer.style.position = 'relative';
+                
+                // 将覆盖层添加到视频容器并立即显示
+                videoContainer.appendChild(overlay);
+                
+                // 完全禁止拖动进度条
+                video.addEventListener('seeking', function(e) {
+                    // 在seeking事件触发时立即重置进度
+                    if (this.seeking && this.currentTime > 1) { // 允许从头开始播放
+                        logDebug(`视频${index+1}尝试拖动进度条，已重置`);
+                        // 如果进度被拖动，则重置回之前的位置或直接重置到起始位置
+                        this.currentTime = 0;
+                        // 尝试重新启动播放
+                        this.play().catch(err => console.error('无法自动播放视频:', err));
+                    }
+                });
+                
+                // 监听时间更新，检测视频是否接近结束
+                video.addEventListener('timeupdate', function() {
+                    // 计算进度百分比
+                    const progress = Math.floor((this.currentTime / this.duration) * 100);
+                    
+                    // 每10%显示一次进度
+                    if (progress % 10 === 0 && progress > 0) {
+                        const lastShownProgress = this.getAttribute('data-last-progress') || 0;
+                        if (parseInt(lastShownProgress) !== progress) {
+                            logDebug(`视频${index+1}播放进度: ${progress}%`);
+                            this.setAttribute('data-last-progress', progress);
+                        }
+                    }
+                    
+                    // 如果视频已经播放到接近结尾的位置 (95%)，且尚未标记为已观看
+                    if (this.currentTime > this.duration * 0.95 && this.getAttribute('data-watched') === 'false') {
+                        this.setAttribute('data-watched', 'true');
+                        watchedVideos++;
+                        logDebug(`视频${index+1}已完成观看 (${watchedVideos}/${videos.length})`);
+                        checkAllVideosWatched();
+                        
+                        // 视频完成后，移除覆盖层允许用户控制
+                        const overlays = videoContainer.querySelectorAll('.video-control-overlay');
+                        overlays.forEach(el => el.remove());
+                    }
+                });
+                
+                // 视频播放错误处理
+                video.addEventListener('error', function() {
+                    logDebug(`视频${index+1}加载错误，将标记为已观看`);
+                    this.setAttribute('data-watched', 'true');
+                    watchedVideos++;
+                    checkAllVideosWatched();
+                });
+                
+                // 禁用右键菜单，防止通过右键操作控制视频
+                video.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+            });
+            
+            // 显示首次观看提示
+            progressBanner.style.display = 'block';
+            progressBanner.innerHTML = '<strong>重要提示：</strong> 首次观看必须完整观看视频，不能拖动进度条。';
+        } else {
+            // 如果已经观看过，显示已观看提示，直接启用按钮
+            logDebug('已观看过视频，直接启用测验按钮');
+            alreadyWatchedBanner.style.display = 'block';
+            enableQuizButton();
+        }
+        
+        // 获取URL参数中的消息并显示
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+        if (message) {
+            document.getElementById('messageText').textContent = message;
+            document.getElementById('redirectMessage').style.display = 'block';
+            logDebug(`显示重定向消息: ${message}`);
+        }
+        
+        // 初始化计数器
+        let watchedVideos = 0;
+        
+        // 如果已经观看过视频，则设置所有视频为已观看状态
+        if (videoWatched) {
+            videos.forEach(video => {
+                video.setAttribute('data-watched', 'true');
+            });
+            watchedVideos = videos.length;
+            logDebug(`已观看状态：所有视频(${watchedVideos}个)标记为已观看`);
+        } else {
+            logDebug(`首次观看状态：观看进度 ${watchedVideos}/${videos.length}`);
+        }
+        
+        // 如果没有视频，直接启用按钮
+        if (videos.length === 0) {
+            enableQuizButton();
+            logDebug('没有视频，直接启用测验按钮');
+        }
+        
+        // 检查所有视频是否都已观看
+        function checkAllVideosWatched() {
+            if (watchedVideos === videos.length) {
+                logDebug('所有视频都已观看完成，启用测验按钮');
+                enableQuizButton();
+            }
+        }
+        
+        // 启用测验按钮
+        function enableQuizButton() {
+            quizButton.classList.remove('btn-disabled');
+            quizButton.removeAttribute('disabled');
+            quizButton.textContent = '完成观看，开始测验';
+            
+            if (!videoWatched) {
+                progressBanner.innerHTML = '<strong>太棒了！</strong> 您已完成所有视频的观看，现在可以开始测验了。';
+                progressBanner.style.backgroundColor = '#d1e7dd';
+                logDebug('更新状态提示: 视频已观看完成');
+            }
+        }
+
         async function startQuiz() {
+            // 如果之前未观看过视频，再次检查是否所有视频都已观看
+            if (!videoWatched && watchedVideos < videos.length) {
+                alert('请先完整观看所有视频！');
+                logDebug('尝试开始测验失败：未完成所有视频观看');
+                return;
+            }
+            
+            // 添加加载指示
+            quizButton.textContent = '正在处理...';
+            quizButton.disabled = true;
+            
             const urlParams = new URLSearchParams(window.location.search);
             const returnDay = urlParams.get('return_day') || '{{ day }}';
-
-            try {
-                const response = await fetch(`/video/{{ user_id }}/{{ day }}?return_day=${returnDay}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
-
-                if (response.ok && data.status === "success" && data.next === "quiz") {
-                    window.location.href = `/quiz/{{ user_id }}/${data.day}`;
-                } else {
-                    alert(data.message || '无法更新视频观看状态，请重试');
+            
+            // 最大重试次数
+            const maxRetries = 3;
+            let currentRetry = 0;
+            let success = false;
+            
+            while (!success && currentRetry < maxRetries) {
+                try {
+                    if (currentRetry > 0) {
+                        logDebug(`第${currentRetry}次重试发送视频观看状态...`);
+                    } else {
+                        logDebug('正在发送视频观看状态更新请求...');
+                    }
+                    
+                    // 简化请求，使用默认的JSON内容类型
+                    const response = await fetch(`/video/{{ user_id }}/{{ day }}?return_day=${returnDay}`, {
+                        method: 'POST'
+                    });
+                    
+                    logDebug(`服务器响应状态: ${response.status}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        logDebug(`服务器响应数据: ${JSON.stringify(data)}`);
+                        
+                        if (data.status === "success" && data.next === "quiz") {
+                            success = true;
+                            logDebug(`请求成功，准备跳转到测验页面: ${data.day}`);
+                            
+                            // 添加一个验证步骤，确保状态已成功保存
+                            try {
+                                logDebug('正在验证视频观看状态是否已保存...');
+                                // 发送GET请求验证状态
+                                const verifyResponse = await fetch(`/verify_video_watched/{{ user_id }}/{{ day }}`, {
+                                    method: 'GET'
+                                });
+                                
+                                if (verifyResponse.ok) {
+                                    const verifyData = await verifyResponse.json();
+                                    logDebug(`验证结果: ${JSON.stringify(verifyData)}`);
+                                    
+                                    if (verifyData.status === "success" && verifyData.video_watched) {
+                                        logDebug('验证成功，视频观看状态已成功保存');
+                                        // 延长等待时间，确保状态保存完成
+                                        setTimeout(() => {
+                                            window.location.href = `/quiz/{{ user_id }}/${data.day}`;
+                                        }, 1500); // 使用更长的延迟
+                                    } else {
+                                        // 验证失败，尝试强制保存
+                                        logDebug('验证失败，尝试使用强制保存API...');
+                                        const forceResponse = await fetch(`/force_video_watched/{{ user_id }}/{{ day }}`, {
+                                            method: 'POST'
+                                        });
+                                        
+                                        if (forceResponse.ok) {
+                                            const forceData = await forceResponse.json();
+                                            logDebug(`强制保存结果: ${JSON.stringify(forceData)}`);
+                                            
+                                            if (forceData.status === "success") {
+                                                logDebug('强制保存成功，准备跳转');
+                                                setTimeout(() => {
+                                                    window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                                }, 1500);
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // 如果强制保存也失败
+                                        logDebug('验证失败，视频观看状态未成功保存，将重试');
+                                        currentRetry++;
+                                        if (currentRetry >= maxRetries) {
+                                            // 如果已达到最大重试次数，仍然尝试跳转
+                                            logDebug('达到最大重试次数，尝试强制跳转');
+                                            setTimeout(() => {
+                                                window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                            }, 2000);
+                                        }
+                                        await new Promise(resolve => setTimeout(resolve, 500)); // 等待500ms后重试
+                                    }
+                                } else {
+                                    logDebug('验证请求失败，尝试强制保存...');
+                                    // 如果验证请求失败，尝试强制保存
+                                    try {
+                                        const forceResponse = await fetch(`/force_video_watched/{{ user_id }}/{{ day }}`, {
+                                            method: 'POST'
+                                        });
+                                        
+                                        if (forceResponse.ok) {
+                                            const forceData = await forceResponse.json();
+                                            logDebug(`强制保存结果: ${JSON.stringify(forceData)}`);
+                                            
+                                            if (forceData.status === "success") {
+                                                logDebug('强制保存成功，准备跳转');
+                                                setTimeout(() => {
+                                                    window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                                }, 1500);
+                                                break;
+                                            }
+                                        }
+                                    } catch (forceError) {
+                                        logDebug(`强制保存请求出错: ${forceError.message}`);
+                                    }
+                                    
+                                    // 如果验证请求失败，仍尝试跳转
+                                    setTimeout(() => {
+                                        window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                    }, 1500);
+                                }
+                            } catch (verifyError) {
+                                logDebug(`验证请求出错: ${verifyError.message}`);
+                                // 如果验证出错，尝试强制保存
+                                try {
+                                    const forceResponse = await fetch(`/force_video_watched/{{ user_id }}/{{ day }}`, {
+                                        method: 'POST'
+                                    });
+                                    
+                                    if (forceResponse.ok) {
+                                        const forceData = await forceResponse.json();
+                                        logDebug(`强制保存结果: ${JSON.stringify(forceData)}`);
+                                        
+                                        if (forceData.status === "success") {
+                                            logDebug('强制保存成功，准备跳转');
+                                            setTimeout(() => {
+                                                window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                            }, 1500);
+                                            break;
+                                        }
+                                    }
+                                } catch (forceError) {
+                                    logDebug(`强制保存请求出错: ${forceError.message}`);
+                                }
+                                
+                                // 如果验证出错，仍尝试跳转
+                                setTimeout(() => {
+                                    window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                }, 1500);
+                            }
+                            
+                            break; // 成功后退出循环
+                        } else {
+                            logDebug(`服务器响应错误: ${JSON.stringify(data)}`);
+                            currentRetry++;
+                            if (currentRetry >= maxRetries) {
+                                logDebug('达到最大重试次数，尝试强制保存');
+                                // 尝试强制保存
+                                try {
+                                    const forceResponse = await fetch(`/force_video_watched/{{ user_id }}/{{ day }}`, {
+                                        method: 'POST'
+                                    });
+                                    
+                                    if (forceResponse.ok) {
+                                        const forceData = await forceResponse.json();
+                                        logDebug(`强制保存结果: ${JSON.stringify(forceData)}`);
+                                        
+                                        if (forceData.status === "success") {
+                                            logDebug('强制保存成功，准备跳转');
+                                            setTimeout(() => {
+                                                window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                            }, 1500);
+                                            break;
+                                        }
+                                    }
+                                } catch (forceError) {
+                                    logDebug(`强制保存请求出错: ${forceError.message}`);
+                                }
+                                
+                                alert(data.message || '无法更新视频观看状态，请重试');
+                                // 恢复按钮状态
+                                quizButton.textContent = '完成观看，开始测验';
+                                quizButton.disabled = false;
+                                break;
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 500)); // 等待500ms后重试
+                        }
+                    } else {
+                        logDebug(`HTTP错误: ${response.status}`);
+                        currentRetry++;
+                        if (currentRetry >= maxRetries) {
+                            logDebug('达到最大重试次数，尝试强制保存');
+                            // 尝试强制保存
+                            try {
+                                const forceResponse = await fetch(`/force_video_watched/{{ user_id }}/{{ day }}`, {
+                                    method: 'POST'
+                                });
+                                
+                                if (forceResponse.ok) {
+                                    const forceData = await forceResponse.json();
+                                    logDebug(`强制保存结果: ${JSON.stringify(forceData)}`);
+                                    
+                                    if (forceData.status === "success") {
+                                        logDebug('强制保存成功，准备跳转');
+                                        setTimeout(() => {
+                                            window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                        }, 1500);
+                                        break;
+                                    }
+                                }
+                            } catch (forceError) {
+                                logDebug(`强制保存请求出错: ${forceError.message}`);
+                            }
+                            
+                            alert('服务器错误，请重试');
+                            // 恢复按钮状态
+                            quizButton.textContent = '完成观看，开始测验';
+                            quizButton.disabled = false;
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 500)); // 等待500ms后重试
+                    }
+                } catch (error) {
+                    logDebug(`请求错误: ${error.message}`);
+                    currentRetry++;
+                    if (currentRetry >= maxRetries) {
+                        logDebug('达到最大重试次数，尝试强制保存');
+                        // 尝试强制保存
+                        try {
+                            const forceResponse = await fetch(`/force_video_watched/{{ user_id }}/{{ day }}`, {
+                                method: 'POST'
+                            });
+                            
+                            if (forceResponse.ok) {
+                                const forceData = await forceResponse.json();
+                                logDebug(`强制保存结果: ${JSON.stringify(forceData)}`);
+                                
+                                if (forceData.status === "success") {
+                                    logDebug('强制保存成功，准备跳转');
+                                    setTimeout(() => {
+                                        window.location.href = `/quiz/{{ user_id }}/${returnDay}?force_continue=true`;
+                                    }, 1500);
+                                    break;
+                                }
+                            }
+                        } catch (forceError) {
+                            logDebug(`强制保存请求出错: ${forceError.message}`);
+                        }
+                        
+                        alert('发生错误，请检查网络连接');
+                        // 恢复按钮状态
+                        quizButton.textContent = '完成观看，开始测验';
+                        quizButton.disabled = false;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 500)); // 等待500ms后重试
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('发生错误，请检查网络连接');
             }
         }
     </script>

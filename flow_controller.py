@@ -12,6 +12,8 @@ Please determine whether the following two texts are basically the same, i.e. de
 
 The original text that the user should read aloud: {{text}} 
 Speech recognition transcription result: {{transcribed_text}}
+
+Please try to check as loosely as possible, because the model used for transcription doesn't perform very well.
 '''
 
 class FlowController:
@@ -71,6 +73,11 @@ class FlowController:
                 except Exception as e:
                     print(f"解析匹配题JSON数据出错: {e}")
         
+        # 提取所有匹配题
+        matching_questions = [q for q in questions if "matching" in q["id"]]
+        # 标记已处理的匹配题
+        processed_matching_ids = []
+        
         for q in questions:
             q_id = q["id"]
             # 安全获取答案字段 - 添加默认值以避免KeyError
@@ -105,12 +112,12 @@ class FlowController:
                     except Exception as e:
                         print(f"Error processing LLM for {q_id}: {e}")
                         # 发生错误时，回退到精确匹配
-            # 处理匹配题
-            elif "matching" in q_id:
-                # 使用当前题目的提交答案或第一个匹配题的JSON数据
+            # 处理匹配题 - 新的集中处理逻辑
+            elif "matching" in q_id and q_id not in processed_matching_ids:
+                # 收集匹配题数据
                 match_data = None
-                matched_successfully = False  # 记录是否匹配成功
                 
+                # 尝试使用此题目提交的答案
                 if submitted_answer and submitted_answer.startswith('[{'):
                     try:
                         match_data = json.loads(submitted_answer)
@@ -124,72 +131,85 @@ class FlowController:
                     print(f"使用第一个匹配题的JSON数据评分 {q_id}")
                 
                 if match_data:
-                    print(f"处理匹配题 {q_id}")
-                    try:
-                        # 提取预期答案 - 支持新的数据结构 {"left": "mouth", "right": "嘴巴"}
-                        if "left" in q and "right" in q:
-                            expected_left_text = q["left"]
-                            expected_right_text = q["right"]
-                        elif isinstance(expected_answer, str):
-                            expected_right_text = expected_answer
+                    # 处理所有匹配题
+                    correct_matches = 0  # 计算正确的匹配数量
+                    total_matches = len(matching_questions)  # 总匹配题数量
+                    
+                    for match_q in matching_questions:
+                        match_id = match_q["id"]
+                        processed_matching_ids.append(match_id)  # 标记为已处理
+                        
+                        # 提取预期答案
+                        expected_left_text = ""
+                        expected_right_text = ""
+                        
+                        if "left" in match_q and "right" in match_q:
+                            expected_left_text = match_q["left"]
+                            expected_right_text = match_q["right"]
+                        elif isinstance(match_q.get("answer", ""), str):
+                            expected_right_text = match_q.get("answer", "")
                             
-                            # 从question中提取左侧文本（如果是"Match: mouth"格式）
-                            question_text = q.get("question", "")
+                            # 从question中提取左侧文本
+                            question_text = match_q.get("question", "")
                             if ":" in question_text:
                                 expected_left_text = question_text.split(":", 1)[1].strip()
                             else:
                                 expected_left_text = question_text
-                        elif isinstance(expected_answer, dict) and "right" in expected_answer:
-                            expected_right_text = expected_answer["right"]
-                            expected_left_text = expected_answer.get("left", "")
+                        elif isinstance(match_q.get("answer", ""), dict) and "right" in match_q.get("answer", ""):
+                            expected_right_text = match_q["answer"]["right"]
+                            expected_left_text = match_q["answer"].get("left", "")
                         else:
-                            expected_right_text = q.get("options", [""])[0]  # 默认取第一个选项
+                            expected_right_text = match_q.get("options", [""])[0]  # 默认取第一个选项
                             
-                            # 从question中提取左侧文本（如果是"Match: mouth"格式）
-                            question_text = q.get("question", "")
+                            # 从question中提取左侧文本
+                            question_text = match_q.get("question", "")
                             if ":" in question_text:
                                 expected_left_text = question_text.split(":", 1)[1].strip()
                             else:
                                 expected_left_text = question_text
-                            
+                        
                         print(f"匹配题预期答案: 左侧='{expected_left_text}', 右侧='{expected_right_text}'")
                         
-                        # 检查提交的连接中是否包含正确答案
-                        # 只要用户连接了正确的一对，就算答对
+                        # 检查是否找到正确匹配
                         is_correct = False
                         for conn in match_data:
                             left_text = conn.get("left", "")
                             right_text = conn.get("right", "")
-                            print(f"检查连接: '{left_text}' - '{right_text}'")
                             
-                            # 检查连接 - 只有左右两侧都匹配预期值时才算正确
                             if left_text == expected_left_text and right_text == expected_right_text:
                                 is_correct = True
                                 print(f"找到正确匹配: '{left_text}' - '{right_text}'")
                                 break
-                                
+                        
                         if is_correct:
-                            correct_count += 1
-                            print(f"匹配题 {q_id} 回答正确")
-                            matched_successfully = True  # 标记为匹配成功
+                            correct_matches += 1  # 增加正确匹配计数
+                            print(f"匹配题 {match_id} 回答正确")
                         else:
-                            q["user_answer"] = json.dumps(match_data) if submitted_answer is None else submitted_answer
-                            wrong_questions.append(q)
-                            print(f"匹配题 {q_id} 回答错误")
-                            
-                    except Exception as e:
-                        print(f"处理匹配题数据出错: {e}")
-                        # 出错时将题目标记为错误
-                        q["user_answer"] = submitted_answer if submitted_answer is not None else None
-                        wrong_questions.append(q)
-                else:
-                    print(f"没有找到匹配题 {q_id} 的提交数据")
-                    q["user_answer"] = submitted_answer if submitted_answer is not None else None
-                    wrong_questions.append(q)
-                
-                # 匹配题已处理完毕，跳过下面的通用评分逻辑
-                if matched_successfully or q_id in [wq["id"] for wq in wrong_questions]:
+                            match_q["user_answer"] = json.dumps(match_data)
+                            wrong_questions.append(match_q)
+                            print(f"匹配题 {match_id} 回答错误")
+                    
+                    # 将正确匹配的数量加到总正确数上
+                    correct_count += correct_matches
+                    print(f"匹配题总数: {total_matches}, 正确匹配数: {correct_matches}")
+                    
+                    # 已处理所有匹配题，跳过当前题目
                     continue
+                else:
+                    # 如果没有匹配数据，标记所有匹配题为错误
+                    for match_q in matching_questions:
+                        match_id = match_q["id"]
+                        processed_matching_ids.append(match_id)  # 标记为已处理
+                        match_q["user_answer"] = None
+                        wrong_questions.append(match_q)
+                        print(f"没有找到匹配题 {match_id} 的提交数据")
+                    
+                    # 已处理所有匹配题，跳过当前题目
+                    continue
+            
+            # 跳过已处理的匹配题
+            if "matching" in q_id and q_id in processed_matching_ids:
+                continue
                 
             else:
                 print(f"Processing question {q_id}: expected={expected_answer}, submitted={submitted_answer}")
@@ -237,6 +257,22 @@ class FlowController:
         questions = attempt["wrong_questions"]
         correct_count = 0
         wrong_questions = []
+        
+        # 查找匹配题的JSON数据
+        first_matching_json = None
+        for key, value in answers.items():
+            if "matching" in key and value and value.startswith('[{'):
+                try:
+                    first_matching_json = json.loads(value)
+                    print(f"找到练习匹配题JSON数据: {first_matching_json}")
+                    break
+                except Exception as e:
+                    print(f"解析练习匹配题JSON数据出错: {e}")
+        
+        # 提取所有匹配题
+        matching_questions = [q for q in questions if "matching" in q["id"]]
+        # 标记已处理的匹配题
+        processed_matching_ids = []
 
         for q in questions:
             q_id = q["id"]
@@ -272,74 +308,104 @@ class FlowController:
                 # 标记已处理，无论成功与否
                 q["already_processed"] = True
             
-            # 处理匹配题的JSON数据
-            elif "matching" in q_id and submitted_answer and submitted_answer.startswith('[{'):
-                print(f"处理练习中的匹配题 {q_id}")
-                matched_successfully = False  # 记录是否匹配成功
+            # 处理匹配题 - 集中处理所有匹配题
+            elif "matching" in q_id and q_id not in processed_matching_ids and len(matching_questions) > 0:
+                # 收集匹配题数据
+                match_data = None
                 
-                try:
-                    match_data = json.loads(submitted_answer)
+                # 尝试使用此题目提交的答案
+                if submitted_answer and submitted_answer.startswith('[{'):
+                    try:
+                        match_data = json.loads(submitted_answer)
+                    except Exception as e:
+                        print(f"解析当前练习匹配题数据出错: {e}")
+                        match_data = None
+                
+                # 如果没有当前题目的提交答案，但有第一个匹配题的JSON数据
+                if not match_data and first_matching_json:
+                    match_data = first_matching_json
+                    print(f"使用第一个匹配题的JSON数据评分练习 {q_id}")
+                
+                if match_data:
+                    # 处理所有匹配题
+                    correct_matches = 0  # 计算正确的匹配数量
+                    total_matches = len(matching_questions)  # 总匹配题数量
                     
-                    # 提取预期答案 - 支持新的数据结构 {"left": "mouth", "right": "嘴巴"}
-                    if "left" in q and "right" in q:
-                        expected_left_text = q["left"]
-                        expected_right_text = q["right"]
-                    elif isinstance(expected_answer, str):
-                        expected_right_text = expected_answer
+                    for match_q in matching_questions:
+                        match_id = match_q["id"]
+                        processed_matching_ids.append(match_id)  # 标记为已处理
                         
-                        # 从question中提取左侧文本（如果是"Match: mouth"格式）
-                        question_text = q.get("question", "")
-                        if ":" in question_text:
-                            expected_left_text = question_text.split(":", 1)[1].strip()
-                        else:
-                            expected_left_text = question_text
-                    elif isinstance(expected_answer, dict) and "right" in expected_answer:
-                        expected_right_text = expected_answer["right"]
-                        expected_left_text = expected_answer.get("left", "")
-                    else:
-                        expected_right_text = q.get("options", [""])[0]  # 默认取第一个选项
+                        # 提取预期答案
+                        expected_left_text = ""
+                        expected_right_text = ""
                         
-                        # 从question中提取左侧文本（如果是"Match: mouth"格式）
-                        question_text = q.get("question", "")
-                        if ":" in question_text:
-                            expected_left_text = question_text.split(":", 1)[1].strip()
-                        else:
-                            expected_left_text = question_text
-                        
-                    print(f"匹配题预期答案: 左侧='{expected_left_text}', 右侧='{expected_right_text}'")
-                    
-                    # 检查提交的连接中是否包含正确答案
-                    # 只要用户连接了正确的一对，就算答对
-                    is_correct = False
-                    for conn in match_data:
-                        left_text = conn.get("left", "")
-                        right_text = conn.get("right", "")
-                        print(f"检查连接: '{left_text}' - '{right_text}'")
-                        
-                        # 检查连接 - 只有左右两侧都匹配预期值时才算正确
-                        if left_text == expected_left_text and right_text == expected_right_text:
-                            is_correct = True
-                            print(f"找到正确匹配: '{left_text}' - '{right_text}'")
-                            break
+                        if "left" in match_q and "right" in match_q:
+                            expected_left_text = match_q["left"]
+                            expected_right_text = match_q["right"]
+                        elif isinstance(match_q.get("answer", ""), str):
+                            expected_right_text = match_q.get("answer", "")
                             
-                    if is_correct:
-                        correct_count += 1
-                        print(f"练习匹配题 {q_id} 回答正确")
-                        matched_successfully = True  # 标记为匹配成功
-                    else:
-                        q["user_answer"] = submitted_answer
-                        wrong_questions.append(q)
-                        print(f"练习匹配题 {q_id} 回答错误")
+                            # 从question中提取左侧文本
+                            question_text = match_q.get("question", "")
+                            if ":" in question_text:
+                                expected_left_text = question_text.split(":", 1)[1].strip()
+                            else:
+                                expected_left_text = question_text
+                        elif isinstance(match_q.get("answer", ""), dict) and "right" in match_q.get("answer", ""):
+                            expected_right_text = match_q["answer"]["right"]
+                            expected_left_text = match_q["answer"].get("left", "")
+                        else:
+                            expected_right_text = match_q.get("options", [""])[0]  # 默认取第一个选项
+                            
+                            # 从question中提取左侧文本
+                            question_text = match_q.get("question", "")
+                            if ":" in question_text:
+                                expected_left_text = question_text.split(":", 1)[1].strip()
+                            else:
+                                expected_left_text = question_text
                         
-                except Exception as e:
-                    print(f"处理练习匹配题JSON数据出错: {e}")
-                    # 出错时将题目标记为错误
-                    q["user_answer"] = submitted_answer
-                    wrong_questions.append(q)
-                
-                # 匹配题已处理完毕，跳过下面的通用评分逻辑
-                if matched_successfully or q_id in [wq["id"] for wq in wrong_questions]:
+                        print(f"练习匹配题预期答案: 左侧='{expected_left_text}', 右侧='{expected_right_text}'")
+                        
+                        # 检查是否找到正确匹配
+                        is_correct = False
+                        for conn in match_data:
+                            left_text = conn.get("left", "")
+                            right_text = conn.get("right", "")
+                            
+                            if left_text == expected_left_text and right_text == expected_right_text:
+                                is_correct = True
+                                print(f"找到正确练习匹配: '{left_text}' - '{right_text}'")
+                                break
+                        
+                        if is_correct:
+                            correct_matches += 1  # 增加正确匹配计数
+                            print(f"练习匹配题 {match_id} 回答正确")
+                        else:
+                            match_q["user_answer"] = json.dumps(match_data)
+                            wrong_questions.append(match_q)
+                            print(f"练习匹配题 {match_id} 回答错误")
+                    
+                    # 将正确匹配的数量加到总正确数上
+                    correct_count += correct_matches
+                    print(f"练习匹配题总数: {total_matches}, 正确匹配数: {correct_matches}")
+                    
+                    # 已处理所有匹配题，跳过当前题目
                     continue
+                else:
+                    # 如果没有匹配数据，标记所有匹配题为错误
+                    for match_q in matching_questions:
+                        match_id = match_q["id"]
+                        processed_matching_ids.append(match_id)  # 标记为已处理
+                        match_q["user_answer"] = None
+                        wrong_questions.append(match_q)
+                        print(f"没有找到练习匹配题 {match_id} 的提交数据")
+                    
+                    # 已处理所有匹配题，跳过当前题目
+                    continue
+            
+            # 跳过已处理的匹配题
+            if "matching" in q_id and q_id in processed_matching_ids:
+                continue
                 
             else:
                 # 对于一般题型和未识别的题型，只处理未被添加到wrong_questions的题目
