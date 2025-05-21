@@ -88,9 +88,9 @@ def video(user_id, day):
                 # video_path = f"/static/videos/{user_state['style']}/{task['unit']}_{task['type']}_day{day}.mp4"
                 video_path = f"/static/videos/{user_state['style']}/{task['unit']}_{task['type']}s_{user_state['style']}.mp4"
                 video_paths.append(video_path)
+        # 即使没有视频也显示页面
         if not video_paths:
-            print(f"No video available for day {day}, redirecting to quiz")
-            return redirect(url_for("quiz", user_id=user_id, day=day))
+            print(f"没有可用的视频，但仍然显示视频页面: day={day}")
 
         return render_template("video.html", user_id=user_id, day=day, video_paths=video_paths, video_watched=video_watched)
 
@@ -405,6 +405,22 @@ def quiz(user_id, day):
         current_task = tasks[current_task_index]
         print(f"Processing task {current_task_index + 1}/{len(tasks)}: {current_task}")
 
+        # 计算初始学习视频日期，与测验失败时的逻辑保持一致
+        video_day = day
+        if current_task["attempt"] > 0:
+            unit = current_task["unit"]
+            content_type = current_task["type"]
+            for past_day in range(1, day):
+                past_tasks = schedule_manager.get_tasks(past_day)
+                for task in past_tasks:
+                    if task["unit"] == unit and task["type"] == content_type and task["attempt"] == 0:
+                        video_day = past_day
+                        print(f"找到{unit}_{content_type}的初始学习日: Day {video_day}")
+                        break
+                if video_day != day:
+                    break
+        print(f"测验页面 - 视频日: {video_day}, 当前日: {day}")
+
         # 检查是否是综合测验日期 - day 26
         is_combined_test = day == schedule_manager.schedule["combined"]
         
@@ -506,7 +522,7 @@ def quiz(user_id, day):
                 questions[key] = q_list
         task_info = [{"unit": current_task["unit"], "type": current_task["type"], "attempt": current_task["attempt"]}]
         print(f"Generated questions for task {current_task}: {questions}")
-        return render_template("quiz.html", user_id=user_id, day=day, questions=questions, tasks=task_info)
+        return render_template("quiz.html", user_id=user_id, day=day, questions=questions, tasks=task_info, video_day=video_day)
 
     elif request.method == "POST":
         answers = {}
@@ -568,6 +584,10 @@ def quiz(user_id, day):
 
         if correct_rate < threshold:
             print(f"Correct rate {correct_rate} < threshold {threshold}, redirecting to video for Day {video_day}")
+            # 注释掉或移除下面这行代码 - 不再重置视频观看状态
+            # user_state["video_watched"][str(video_day)] = False
+            # user_manager.save_user(user_state)
+            
             return jsonify({
                 "next": "video",
                 "user_id": user_id,
@@ -652,6 +672,22 @@ def practice(user_id, day):
         attempt = user_state["units"][current_task["unit"]][current_task["type"]]["attempts"][current_task["attempt"]]
         print(f"Attempt data for {current_task['unit']}_{current_task['type']}_attempt{current_task['attempt']}: {attempt}")
 
+        # 计算初始学习视频日期，与测验失败时的逻辑保持一致
+        video_day = day
+        if current_task["attempt"] > 0:
+            unit = current_task["unit"]
+            content_type = current_task["type"]
+            for past_day in range(1, day):
+                past_tasks = schedule_manager.get_tasks(past_day)
+                for task in past_tasks:
+                    if task["unit"] == unit and task["type"] == content_type and task["attempt"] == 0:
+                        video_day = past_day
+                        print(f"练习页面 - 找到{unit}_{content_type}的初始学习日: Day {video_day}")
+                        break
+                if video_day != day:
+                    break
+        print(f"练习页面 - 视频日: {video_day}, 当前日: {day}")
+
         # Prepare questions for the template, adding model_audio_url for read_aloud questions
         processed_questions_for_template = {}
         # wrong_questions is a list of question dicts according to user_state sample
@@ -725,7 +761,7 @@ def practice(user_id, day):
             "subtypes": current_task.get("subtypes", [])
         }]
         print(f"Rendering practice with questions: {processed_questions_for_template}, task_info: {task_info}")
-        return render_template("practice.html", user_id=user_id, day=day, questions=processed_questions_for_template, tasks=task_info)
+        return render_template("practice.html", user_id=user_id, day=day, questions=processed_questions_for_template, tasks=task_info, video_day=video_day)
 
     # POST 处理保持不变
     elif request.method == "POST":

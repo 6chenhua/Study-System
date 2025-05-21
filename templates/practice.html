@@ -15,7 +15,15 @@
 </head>
 <body>
     <div class="container mt-4 mb-5">
-        <h1 class="mb-4">第{{ day }}天 - 练习</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/video/{{ user_id }}/{{ video_day }}?return_day={{ day }}" 
+               onclick="return confirm('小朋友，你确定要返回观看视频吗？返回后需要重做所有题目哦~');" 
+               class="btn btn-primary">
+                <i class="fas fa-arrow-left me-1"></i> 返回观看视频
+            </a>
+            <h1 class="m-0">第{{ day }}天 - 练习</h1>
+            <div style="width: 160px;"></div><!-- 用于平衡布局 -->
+        </div>
         
     <form id="practiceForm" data-user-id="{{ user_id }}" data-day="{{ day }}">
             {% for key, q_list in questions.items() %}
@@ -29,9 +37,9 @@
                                 <p><strong>{{ loop.index }}. {% if question.subtype == "matching" and question.match_prompt %}{{ question.match_prompt }}{% elif question.subtype == "matching" and ":" in question.question %}{{ question.question.split(":")[1] | trim }}{% else %}{{ question.question }}{% endif %}</strong></p>
                                 
                                 <!-- 显示正确答案 -->
-                                <div class="alert alert-info mb-2">
-                                    正确答案: {% if question.subtype == "matching" %}连接 "{{ question.left }}" 和 "{{ question.right }}"{% else %}{{ question.answer }}{% endif %}
-                                </div>
+{#                                <div class="alert alert-info mb-2">#}
+{#                                    正确答案: {% if question.subtype == "matching" %}连接 "{{ question.left }}" 和 "{{ question.right }}"{% else %}{{ question.answer }}{% endif %}#}
+{#                                </div>#}
                                 
                                 <!-- 显示用户的上一次答案(如果有) -->
                                 {% if question.user_answer %}
@@ -125,12 +133,13 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Custom JS (recorder) -->
     <script type="module">
         import recorder from '{{ url_for("static", filename="js/recorder.js") }}';
 
-            const form = document.getElementById('practiceForm');
-            const audioData = new Map();
+        const form = document.getElementById('practiceForm');
+        const audioData = new Map();
 
         // Audio recording logic
         document.querySelectorAll('.recording-btn').forEach(btn => {
