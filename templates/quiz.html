@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测验 - 第{{ day }}天</title>
+    <title>每日小测验</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- FontAwesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Nunito) -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
@@ -27,74 +27,115 @@
         {% for key, q_list in questions.items() %}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">
-            <h2>{{ key.replace('_', ' ') | capitalize }}</h2>
+                        <h2>
+                            {% set unit_parts = key.split('_') %}
+                            {% set unit_number = unit_parts[0].replace('unit', '') %}
+                            单元{{ unit_number }} - 
+                            {% if "image_choice" in key or (question and question.subtype == "image_choice") %}
+                                图片选择题
+                            {% elif 'choice' in key %}
+                                选择题
+                            {% elif 'fill_in_blank' in key %}
+                                填空题
+                            {% elif 'matching' in key %}
+                                连线题
+                            {% elif 'read_aloud' in key %}
+                                朗读题
+                            {% elif 'spelling' in key %}
+                                拼写题
+                            {% elif 'text_input' in key %}
+                                输入题
+                            {% else %}
+                                {{ key.replace('_', ' ') | capitalize }}
+                            {% endif %}
+                        </h2>
                     </div>
                     <div class="card-body">
             {% for question in q_list %}
                             <div class="question mb-4 p-3">
                                 <p><strong>{{ loop.index }}. {% if "matching" in key and question.match_prompt %}{{ question.match_prompt }}{% elif "matching" in key and ":" in question.question %}{{ question.question.split(":")[1] | trim }}{% else %}{{ question.question }}{% endif %}</strong></p>
                                 
-                    {% if "options" in question %}
-                        {% if "matching" in key %}
-                                        <div class="matching-game" data-question-id="{{ question.id }}"
-                                             {% if "left" in question %}data-left="{{ question.left }}"{% endif %}
-                                             {% if "right" in question %}data-right="{{ question.right }}"{% endif %}>
-                                            <div class="matching-header mb-3">
-                                                <div class="difficulty-buttons">
-                                                    <button type="button" class="btn btn-sm difficulty-btn easy active">简单</button>
-                                                    <button type="button" class="btn btn-sm difficulty-btn medium">中等</button>
-                                                    <button type="button" class="btn btn-sm difficulty-btn hard">困难</button>
-                                                </div>
-                                                <button type="button" class="btn btn-sm reset-btn">
-                                                    <i class="fas fa-sync-alt"></i> 重置
-                                                </button>
+                    {% if "options" in question and question.subtype != "image_choice" and "matching" not in key %}
+                        {# This is for regular multiple choice questions #}
+                        <div class="radio-group mt-2">
+                            {% for option in question.options %}
+                                <div class="form-check fs-5">
+                                    <input class="form-check-input" type="radio" id="{{ question.id }}_{{ loop.index }}" name="{{ question.id }}" value="{{ option }}">
+                                    <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}">{{ option }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% elif question.subtype == "image_choice" or "image_choice" in key or "image_choice" in question.id %}
+                        {# This is for image choice questions #}
+                        <div class="image-choice-container py-3">
+                            <div class="row image-options">
+                            {% for option in question.options %}
+                                <div class="col-md-3 col-sm-6 mb-4">
+                                    <div class="image-option" data-value="{{ option }}" data-correct="{{ question.answer == option }}">
+                                        <input type="radio" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ option }}" class="image-choice-input">
+                                        <label for="{{ question.id }}_{{ loop.index }}" class="image-choice-label">
+                                            <div class="position-relative">
+                                                <img src="{{ url_for('static', filename='images/questions/' + option) }}" 
+                                                    alt="{{ option }}" class="img-fluid rounded">
+                                                <div class="text-center mt-2 small text-muted">{{ option }}</div>
                                             </div>
-                                            
-                                            <div class="matching-container position-relative mb-3">
-                                                <!-- 注意：已修复重复显示多个匹配题框的问题，现在只显示不重复的匹配题 -->
-                                                <div class="matching-items-container row">
-                                                    <div class="left-items col-md-5">
-                                                        <!-- Left items will be populated by JS -->
-                                                    </div>
-                                                    <div class="center-space col-md-2 d-flex align-items-center justify-content-center">
-                                                        <!-- This creates space for the lines -->
-                                                    </div>
-                                                    <div class="right-items col-md-5">
-                                                        <!-- Right items will be populated by JS -->
-                                                    </div>
-                                                </div>
-                                                <!-- SVG for connection lines will be inserted here -->
-                                                <svg class="connection-lines position-absolute top-0 start-0 w-100 h-100" style="z-index: 10; pointer-events: none;"></svg>
-                                            </div>
-                                            
-                                            <div class="completion-message alert alert-success" style="display: none;">
-                                                <i class="fas fa-check-circle me-2"></i>
-                                                <span>恭喜！您已完成所有匹配！</span>
-                                            </div>
-                                            
-                                            <div class="progress-container">
-                                                <div class="progress">
-                                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
-                                                </div>
-                                                <span class="progress-text">0/4</span>
-                                            </div>
-                                            
-                                            <!-- Hidden input to store the connections for form submission -->
-                                            <input type="hidden" name="{{ question.id }}" class="matching-answer"
-                                                   {% if "left" in question and "right" in question %}
-                                                   data-match-data='[{"left":"{{ question.left }}","right":"{{ question.right }}"}]'
-                                                   {% endif %}>
-                                        </div>
-                                    {% else %} <!-- Multiple choice -->
-                                        <div class="radio-group mt-2">
-                                {% for option in question.options %}
-                                                <div class="form-check fs-5">
-                                                    <input class="form-check-input" type="radio" id="{{ question.id }}_{{ loop.index }}" name="{{ question.id }}" value="{{ option }}">
-                                                    <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}">{{ option }}</label>
-                                                </div>
-                                {% endfor %}
-                                        </div>
-                        {% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    {% elif "matching" in key %}
+                        {# This is for matching questions #}
+                        <div class="matching-game" data-question-id="{{ question.id }}"
+                             {% if "left" in question %}data-left="{{ question.left }}"{% endif %}
+                             {% if "right" in question %}data-right="{{ question.right }}"{% endif %}>
+                            <div class="matching-header mb-3">
+                                <div class="difficulty-buttons">
+                                    <button type="button" class="btn btn-sm difficulty-btn easy active">简单</button>
+                                    <button type="button" class="btn btn-sm difficulty-btn medium">中等</button>
+                                    <button type="button" class="btn btn-sm difficulty-btn hard">困难</button>
+                                </div>
+                                <button type="button" class="btn btn-sm reset-btn">
+                                    <i class="fas fa-sync-alt"></i> 重置
+                                </button>
+                            </div>
+                            
+                            <div class="matching-container position-relative mb-3">
+                                <!-- 注意：已修复重复显示多个匹配题框的问题，现在只显示不重复的匹配题 -->
+                                <div class="matching-items-container row">
+                                    <div class="left-items col-md-5">
+                                        <!-- Left items will be populated by JS -->
+                                    </div>
+                                    <div class="center-space col-md-2 d-flex align-items-center justify-content-center">
+                                        <!-- This creates space for the lines -->
+                                    </div>
+                                    <div class="right-items col-md-5">
+                                        <!-- Right items will be populated by JS -->
+                                    </div>
+                                </div>
+                                <!-- SVG for connection lines will be inserted here -->
+                                <svg class="connection-lines position-absolute top-0 start-0 w-100 h-100" style="z-index: 10; pointer-events: none;"></svg>
+                            </div>
+                            
+                            <div class="completion-message alert alert-success" style="display: none;">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span>恭喜！您已完成所有匹配！</span>
+                            </div>
+                            
+                            <div class="progress-container">
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <span class="progress-text">0/4</span>
+                            </div>
+                            
+                            <!-- Hidden input to store the connections for form submission -->
+                            <input type="hidden" name="{{ question.id }}" class="matching-answer"
+                                   {% if "left" in question and "right" in question %}
+                                   data-match-data='[{"left":"{{ question.left }}","right":"{{ question.right }}"}]'
+                                   {% endif %}>
+                        </div>
                     {% elif "read_aloud" in key %}
                                     <div class="mt-2 text-center"> <!-- Centering the audio player and button -->
                                         {% if question.model_audio_url %}
@@ -142,6 +183,8 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS (image quiz) -->
+    <script src="{{ url_for('static', filename='js/image-quiz.js') }}"></script>
     <!-- Custom JS (recorder) -->
     <script type="module">
         import recorder from '{{ url_for("static", filename="js/recorder.js") }}';

@@ -589,3 +589,133 @@ video {
   min-width: 3rem;
   text-align: right;
 }
+
+/* 图片选择题样式 - 更新版本 */
+.image-choice-container {
+    margin: 1.5rem 0;
+}
+
+.image-option {
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.image-choice-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.image-choice-label {
+    display: block;
+    cursor: pointer;
+    padding: 8px;
+    border: 3px solid #e9ecef;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.image-choice-label img {
+    width: 100%;
+    height: auto;
+    max-height: 240px;
+    display: block;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    /* border: 5px solid red !important; */ /* 移除临时调试边框 */
+}
+
+.image-choice-input:checked + .image-choice-label {
+    border-color: #4361ee; /* 保留选中时的边框高亮 */
+    box-shadow: 0 8px 16px rgba(67, 97, 238, 0.3);
+    transform: translateY(-5px);
+}
+
+.image-choice-input:focus + .image-choice-label {
+    border-color: #4361ee;
+}
+
+.image-choice-label:hover {
+    border-color: #adb5bd;
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 移除图片选择题反馈图标的CSS */
+/*
+.feedback-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.correct-icon {
+    background-color: #22c55e; 
+    color: white;
+}
+
+.incorrect-icon {
+    background-color: #ef4444; 
+    color: white;
+}
+
+.image-option.selected .feedback-icon.correct-icon,
+.image-option.selected .feedback-icon.incorrect-icon {
+    opacity: 0;
+}
+
+.image-option.selected-correct .feedback-icon.correct-icon {
+    opacity: 1;
+}
+
+.image-option.selected-incorrect .feedback-icon.incorrect-icon {
+    opacity: 1;
+}
+
+.image-option.selected-correct .image-choice-label {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.5);
+}
+
+.image-option.selected-incorrect .image-choice-label {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.5);
+}
+*/
+
+/* 移除“下一题”按钮的CSS */
+/*
+.next-question-btn {
+    display: none;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #4361ee;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.next-question-btn:hover {
+    background-color: #3b55d9;
+    transform: translateY(-2px);
+}
+
+.next-question-btn.visible {
+    display: inline-block;
+}
+*/

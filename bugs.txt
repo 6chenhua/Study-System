@@ -22,5 +22,7 @@ practice不能跳转到下一个task quiz  √
 
 如果视频没看完，限制直接跳转到测试 √
 
+## 改了video.html 94行 （暂时停用拖动进度条）
+
 打包为app.exe后无法识别音频，报错：
 ERROR:utils.speech:FFmpeg not found: [Errno 2] No such file or directory: 'C:\\Users\\86132\\AppData\\Local\\Temp\\_MEI122162\\whisper\\assets\\mel_filters.npz'. Please install ffmpeg and add it to PATH.

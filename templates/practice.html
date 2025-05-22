@@ -6,8 +6,8 @@
     <title>练习 - 第{{ day }}天</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- FontAwesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts (Nunito) -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
@@ -29,7 +29,41 @@
             {% for key, q_list in questions.items() %}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">
-                        <h2>{{ key.replace('_', ' ') | capitalize }} 练习</h2>
+                        <h2>
+                            {% if "image_choice" in key or (q_list and q_list[0] and q_list[0].subtype == "image_choice") %}
+                                {% set unit_parts = key.split('_') %}
+                                {% set unit_number = unit_parts[0].replace('unit', '') %}
+                                单元{{ unit_number }} - 图片选择题
+                            {% elif key == 'word' %}
+                                单元1 - 词汇练习
+                            {% elif key == 'sentence' %}
+                                单元1 - 句型练习
+                            {% elif 'unit1_word' in key %}
+                                单元1 - 词汇练习
+                            {% elif 'unit2_word' in key %}
+                                单元2 - 词汇练习
+                            {% elif 'unit1_sentence' in key %}
+                                单元1 - 句型练习
+                            {% elif 'unit2_sentence' in key %}
+                                单元2 - 句型练习
+                            {% else %}
+                                {% set unit_parts = key.split('_') %}
+                                {% if unit_parts|length >= 2 %}
+                                    {% set unit_num = unit_parts[0].replace('unit', '') %}
+                                    单元{{ unit_num }} - 
+                                    {% if 'word' in unit_parts[1] %}
+                                        词汇
+                                    {% elif 'sentence' in unit_parts[1] %}
+                                        句子
+                                    {% else %}
+                                        {{ unit_parts[1] }}
+                                    {% endif %}
+                                    练习
+                                {% else %}
+                                    {{ key }} 练习
+                                {% endif %}
+                            {% endif %}
+                        </h2>
                     </div>
                     <div class="card-body">
             {% for question in q_list %}
@@ -49,14 +83,33 @@
                                 {% endif %}
                                 
                                 <!-- 根据题型显示不同的输入控件 -->
-                                {% if question.subtype == "choice" and question.options %}
+                                {% if question.subtype == "choice" and "options" in question and question.subtype != "image_choice" %}
                                     <div class="radio-group">
-                                {% for option in question.options %}
+                                    {% for option in question.options %}
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ option }}">
                                                 <label class="form-check-label" for="{{ question.id }}_{{ loop.index }}">{{ option }}</label>
                                             </div>
-                                {% endfor %}
+                                    {% endfor %}
+                                    </div>
+                                {% elif question.subtype == "image_choice" or "image_choice" in question.id %}
+                                    <div class="image-choice-container py-3">
+                                        <div class="row image-options">
+                                        {% for option in question.options %}
+                                            <div class="col-md-3 col-sm-6 mb-4">
+                                                <div class="image-option" data-value="{{ option }}" data-correct="{{ question.answer == option }}">
+                                                    <input type="radio" name="{{ question.id }}" id="{{ question.id }}_{{ loop.index }}" value="{{ option }}" class="image-choice-input">
+                                                    <label for="{{ question.id }}_{{ loop.index }}" class="image-choice-label">
+                                                        <div class="position-relative">
+                                                            <img src="{{ url_for('static', filename='images/questions/' + option) }}" 
+                                                                alt="{{ option }}" class="img-fluid rounded">
+                                                            <div class="text-center mt-2 small text-muted">{{ option }}</div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        </div>
                                     </div>
                                 {% elif question.subtype == "matching" %}
                                     <div class="matching-game" data-question-id="{{ question.id }}"
@@ -133,13 +186,14 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- Custom JS (image quiz) -->
+    <script src="{{ url_for('static', filename='js/image-quiz.js') }}"></script>
     <!-- Custom JS (recorder) -->
     <script type="module">
         import recorder from '{{ url_for("static", filename="js/recorder.js") }}';
 
-        const form = document.getElementById('practiceForm');
-        const audioData = new Map();
+            const form = document.getElementById('practiceForm');
+            const audioData = new Map();
 
         // Audio recording logic
         document.querySelectorAll('.recording-btn').forEach(btn => {

@@ -1,7 +1,7 @@
 {
     "user_id": "lll",
     "style": "analytic_verbal",
-    "current_day": 4,
+    "current_day": 5,
     "progress": "started",
     "units": {
         "unit1": {
@@ -16,6 +16,11 @@
                         "day": 2,
                         "correct_rate": 1.0,
                         "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
                     }
                 ]
             },
@@ -23,6 +28,11 @@
                 "attempts": [
                     {
                         "day": 3,
+                        "correct_rate": 1.0,
+                        "wrong_questions": []
+                    },
+                    {
+                        "day": 4,
                         "correct_rate": 1.0,
                         "wrong_questions": []
                     }

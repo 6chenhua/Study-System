@@ -5,6 +5,7 @@ import time
 import traceback
 import uuid
 
+
 class UserManager:
     @staticmethod
     def init_user(user_id, style):
@@ -33,7 +34,7 @@ class UserManager:
         file_path = f"user_state/{user_id}.json"
         backup_path = f"{file_path}.bak"
         temp_path = f"{file_path}.temp"
-        
+
         # 检查并删除临时文件
         for path in [temp_path]:
             if os.path.exists(path):
@@ -42,11 +43,11 @@ class UserManager:
                     print(f"删除旧的临时文件: {path}")
                 except Exception as e:
                     print(f"无法删除临时文件 {path}: {str(e)}")
-        
+
         # 优先尝试加载主文件
         user_state = None
         load_from_main = False
-        
+
         if os.path.exists(file_path):
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
@@ -63,7 +64,7 @@ class UserManager:
             except Exception as e:
                 print(f"加载主文件用户状态错误 {user_id}: {str(e)}")
                 print(traceback.format_exc())
-        
+
         # 如果主文件不存在或加载失败，尝试加载备份文件
         if not user_state and os.path.exists(backup_path):
             try:
@@ -86,7 +87,7 @@ class UserManager:
             except Exception as e:
                 print(f"从备份加载用户状态错误 {user_id}: {str(e)}")
                 print(traceback.format_exc())
-        
+
         # 加载成功后，检查是否需要从备份恢复视频观看状态
         if user_state and load_from_main and os.path.exists(backup_path):
             try:
@@ -98,7 +99,7 @@ class UserManager:
                         if "video_watched" in backup_state and backup_state["video_watched"]:
                             main_video_watched = user_state.get("video_watched", {})
                             backup_video_watched = backup_state.get("video_watched", {})
-                            
+
                             # 检查备份中是否有主文件中没有的天数记录
                             updated = False
                             for day, watched in backup_video_watched.items():
@@ -108,7 +109,7 @@ class UserManager:
                                         user_state["video_watched"] = {}
                                     user_state["video_watched"][day] = watched
                                     updated = True
-                            
+
                             if updated:
                                 # 发现更新，保存回主文件
                                 UserManager.save_user(user_state)
@@ -117,14 +118,14 @@ class UserManager:
                 print(f"检查备份文件JSON解析错误: {str(e)}")
             except Exception as e:
                 print(f"检查备份文件时出错: {str(e)}")
-        
+
         # 确保返回的用户状态包含必要的字段
         if user_state:
             if "video_watched" not in user_state:
                 user_state["video_watched"] = {}
                 print(f"为用户 {user_id} 添加缺失的video_watched字段")
             return user_state
-        
+
         return None
 
     @staticmethod
@@ -134,33 +135,33 @@ class UserManager:
             if not user_state or not isinstance(user_state, dict) or "user_id" not in user_state:
                 print("保存用户状态失败: 无效的用户状态")
                 return False
-                
+
             # 创建用户状态目录
             os.makedirs("user_state", exist_ok=True)
-            
+
             # 保存用户状态
             user_id = user_state["user_id"]
             file_path = f"user_state/{user_id}.json"
             backup_path = f"{file_path}.bak"
             temp_path = f"{file_path}.temp"
-            
+
             # 确保有视频观看状态字段
             if "video_watched" not in user_state:
                 user_state["video_watched"] = {}
                 print(f"为用户 {user_id} 添加缺失的video_watched字段")
-            
+
             print(f"正在保存用户状态，视频观看状态: {user_state.get('video_watched', {})}")
-            
+
             # 转换为JSON字符串
             try:
                 json_str = json.dumps(user_state, ensure_ascii=False, indent=4)
             except Exception as e:
                 print(f"JSON序列化失败: {str(e)}")
                 return False
-            
+
             # 使用不同的保存策略
             save_success = False
-            
+
             # 策略1: 直接保存到备份文件
             try:
                 with open(backup_path, "w", encoding="utf-8") as f:
@@ -171,7 +172,7 @@ class UserManager:
                 save_success = True
             except Exception as e:
                 print(f"保存到备份文件失败: {str(e)}")
-            
+
             # 策略2: 使用临时文件然后重命名
             try:
                 # 生成唯一的临时文件名避免冲突
@@ -180,14 +181,14 @@ class UserManager:
                     f.write(json_str)
                     f.flush()
                     os.fsync(f.fileno())
-                
+
                 # 确保目标文件不存在（Windows特殊处理）
                 if os.path.exists(file_path):
                     try:
                         os.remove(file_path)
                     except Exception as e:
                         print(f"移除现有文件失败: {str(e)}")
-                
+
                 # 重命名临时文件
                 shutil.move(unique_temp, file_path)
                 print(f"成功保存到主文件(通过临时文件): {file_path}")
@@ -204,7 +205,7 @@ class UserManager:
                     save_success = True
                 except Exception as e2:
                     print(f"直接保存到主文件失败: {str(e2)}")
-            
+
             # 验证文件是否成功保存
             saved_video_watched = None
             if os.path.exists(file_path):
@@ -215,9 +216,10 @@ class UserManager:
                         print(f"验证保存的视频观看状态: {saved_video_watched}")
                 except Exception as e:
                     print(f"验证保存内容时出错: {str(e)}")
-            
+
             # 如果主文件验证失败但备份存在，尝试从备份恢复
-            if (not saved_video_watched or saved_video_watched != user_state.get("video_watched", {})) and os.path.exists(backup_path):
+            if (not saved_video_watched or saved_video_watched != user_state.get("video_watched",
+                                                                                 {})) and os.path.exists(backup_path):
                 try:
                     print("主文件保存验证失败，尝试从备份恢复")
                     with open(backup_path, "r", encoding="utf-8") as bf:
@@ -229,9 +231,9 @@ class UserManager:
                     print("已从备份恢复到主文件")
                 except Exception as e:
                     print(f"从备份恢复主文件失败: {str(e)}")
-            
+
             return save_success
-                
+
         except Exception as e:
             print(f"保存用户状态错误: {str(e)}")
             print(traceback.format_exc())
@@ -246,23 +248,23 @@ class UserManager:
             if not user_state:
                 print(f"强制保存失败: 用户 {user_id} 不存在")
                 return False
-            
+
             # 设置视频观看状态
             if "video_watched" not in user_state:
                 user_state["video_watched"] = {}
-            
+
             user_state["video_watched"][str(day)] = watched
             print(f"强制设置视频观看状态: user_id={user_id}, day={day}, watched={watched}")
-            
+
             # 直接写入文件
             file_path = f"user_state/{user_id}.json"
             json_str = json.dumps(user_state, ensure_ascii=False, indent=4)
-            
+
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(json_str)
                 f.flush()
                 os.fsync(f.fileno())
-            
+
             print(f"强制保存视频观看状态成功")
             return True
         except Exception as e:

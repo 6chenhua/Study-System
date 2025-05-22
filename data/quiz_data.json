@@ -9,6 +9,10 @@
                 {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"},
                 {"question": "书本的英文是？", "options": ["book", "ruler"], "answer": "book"}
             ],
+            "image_choice": [
+                {"question": "请选择ruler对应的图片。", "options": ["book.png", "pencil.png", "ruler.png", "eraser.png"], "answer": "ruler.png"},
+                {"question": "Select the image that matches: \"Cat\"", "options": ["cat.jpg", "dog1.jpg", "dog2.jpg", "dog3.jpg"], "answer": "cat.jpg", "subtype": "image_choice"}
+            ],
             "matching": [
                 { "left": "mouth", "right": "嘴巴" },
                 { "left": "nose", "right": "鼻子" },
@@ -37,6 +41,10 @@
             ],
             "choice": [
                 {"question": "我有一个书包。", "options": ["I have a schoolbag.", "I have a teacher."], "answer": "I have a schoolbag."}
+            ],
+            "image_choice": [
+                {"question": "请选择ruler对应的图片。", "options": ["book.png", "pencil.png", "ruler.png", "eraser.png"], "answer": "ruler.png"},
+                {"question": "Select the image that matches: \"Cat\"", "options": ["cat.jpg", "dog1.jpg", "dog2.jpg", "dog3.jpg"], "answer": "cat.jpg", "subtype": "image_choice"}
             ]
         }
     },
@@ -44,6 +52,10 @@
         "word": {
             "choice": [
                 {"question": "耳朵的英文是？", "options": ["ear", "eye"], "answer": "ear"}
+            ],
+            "image_choice": [
+                {"question": "请选择ruler对应的图片。", "options": ["book.png", "pencil.png", "ruler.png", "eraser.png"], "answer": "ruler.png"},
+                {"question": "Select the image that matches: \"Cat\"", "options": ["cat.jpg", "dog1.jpg", "dog2.jpg", "dog3.jpg"], "answer": "cat.jpg", "subtype": "image_choice"}
             ],
             "matching": [
                 { "left": "mouth", "right": "嘴巴" },
@@ -70,6 +82,10 @@
             ],
             "choice": [
                 {"question": "这是我的脸。", "options": ["This is my face.", "Touch your face."], "answer": "This is my face."}
+            ],
+            "image_choice": [
+                {"question": "请选择ruler对应的图片。", "options": ["book.png", "pencil.png", "ruler.png", "eraser.png"], "answer": "ruler.png"},
+                {"question": "Select the image that matches: \"Cat\"", "options": ["cat.jpg", "dog1.jpg", "dog2.jpg", "dog3.jpg"], "answer": "cat.jpg", "subtype": "image_choice"}
             ]
         }
     }

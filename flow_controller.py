@@ -112,6 +112,16 @@ class FlowController:
                     except Exception as e:
                         print(f"Error processing LLM for {q_id}: {e}")
                         # 发生错误时，回退到精确匹配
+            # 处理图片选择题 - 和普通选择题相同的评分逻辑
+            elif "image_choice" in q_id or q.get("subtype") == "image_choice":
+                print(f"处理图片选择题 {q_id}: 预期答案={expected_answer}, 提交答案={submitted_answer}")
+                if submitted_answer == expected_answer:
+                    correct_count += 1
+                    continue
+                else:
+                    q["user_answer"] = submitted_answer if submitted_answer is not None else None
+                    wrong_questions.append(q)
+                    continue
             # 处理匹配题 - 新的集中处理逻辑
             elif "matching" in q_id and q_id not in processed_matching_ids:
                 # 收集匹配题数据
@@ -307,6 +317,17 @@ class FlowController:
                     print(f"Error processing LLM for practice {q_id}: {e}")
                 # 标记已处理，无论成功与否
                 q["already_processed"] = True
+            
+            # 处理图片选择题 - 和普通选择题相同的评分逻辑
+            elif "image_choice" in q_id or q.get("subtype") == "image_choice":
+                print(f"处理图片选择题 {q_id}: 预期答案={expected_answer}, 提交答案={submitted_answer}")
+                if submitted_answer == expected_answer:
+                    correct_count += 1
+                    continue
+                else:
+                    q["user_answer"] = submitted_answer if submitted_answer is not None else None
+                    wrong_questions.append(q)
+                    continue
             
             # 处理匹配题 - 集中处理所有匹配题
             elif "matching" in q_id and q_id not in processed_matching_ids and len(matching_questions) > 0:

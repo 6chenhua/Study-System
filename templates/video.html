@@ -91,7 +91,8 @@
     <!-- 视频控制脚本 -->
     <script>
         // 通过隐藏的数据属性获取视频观看状态
-        var videoWatched = document.body.getAttribute('data-video-watched') === 'true';
+        {#var videoWatched = document.body.getAttribute('data-video-watched') === 'true'#}
+        var videoWatched = 'true';
         
         // 记录调试信息
         function logDebug(message) {
